@@ -1,11 +1,12 @@
 use std::cmp;
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::Display;
+use std::fmt::{Debug, Display, Formatter};
 
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
+use strum::IntoEnumIterator;
 use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 
 use crate::common::{Circle, Vec2F};
@@ -99,20 +100,19 @@ impl cmp::PartialEq<Sign> for Sign {
     }
 }
 
+impl fmt::Debug for Sign {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        for (i, feature) in Feature::iter().enumerate() {
+            let value = self.required_attributes.get(i) | self.irrelevant_attributes.get(i);
+            writeln!(f, "{}: {}", feature, value)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl fmt::Display for Sign {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        // let features =
-        //     Feature::iter()
-        //         .enumerate()
-        //         .fold(String::from("{{\n"), |features, (idx, f)| {
-        //             features
-        //                 + f.to_string().as_str()
-        //                 + ": "
-        //                 + self.required_attributes.get(idx).to_string().as_str()
-        //                 + "\n"
-        //         })
-        //         + "}}";
-
         write!(
             f,
             "Sign (relevant, irrelevant): ({:#b}, {:#b})",
