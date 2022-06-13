@@ -290,6 +290,10 @@ export StateGraphPage := Page {
 
         node-moved(node) => {
             if (selected-tool == "default") {
+                if (!node-config-panel.hidden && node-config-panel.node.id == node.id) {
+                    node-config-panel.node = node;
+                }
+
                 root.node-moved(node);
             }
         }
