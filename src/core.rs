@@ -5,8 +5,8 @@ use image::imageops;
 use nokhwa::ThreadedCamera;
 #[allow(unused_imports)]
 use slint::ComponentHandle;
-use slint::Image;
 use slint::Weak;
+use slint::{Image, SharedPixelBuffer};
 
 use crate::common::state::{StateMachine, StateType};
 use crate::common::{pointer, PointerTracker, ProbabilityVector, Sign};
@@ -154,10 +154,19 @@ impl Core {
             self.probability_vector.rebalance();
         }
 
-        let window_clone = self.window.clone();
-        slint::invoke_from_event_loop(move || {
-            let image = Image::from_rgb8(packet.image_buffer);
-            window_clone.unwrap().set_webcam_image(image);
+        slint::invoke_from_event_loop({
+            let window_clone = self.window.clone();
+            let frame = self.camera.last_frame();
+
+            move || {
+                let buffer = SharedPixelBuffer::clone_from_slice(
+                    frame.as_raw(),
+                    frame.width(),
+                    frame.height(),
+                );
+                let image = Image::from_rgb8(buffer);
+                window_clone.unwrap().set_webcam_image(image);
+            }
         });
     }
 }

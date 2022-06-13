@@ -1,6 +1,5 @@
 use image::{ImageBuffer, Rgb};
 use libc::{c_void, size_t};
-use slint::{Rgb8Pixel, SharedPixelBuffer};
 
 use crate::common::Point2F;
 
@@ -25,7 +24,6 @@ struct FFIPacket {
 }
 
 pub struct Packet {
-    pub image_buffer: SharedPixelBuffer<Rgb8Pixel>,
     pub landmarks: Option<Vec<Point2F>>,
 }
 
@@ -58,10 +56,7 @@ impl Mediapipe {
                 None
             };
 
-            Packet {
-                image_buffer: SharedPixelBuffer::clone_from_slice(data, width, height),
-                landmarks,
-            }
+            Packet { landmarks }
         }
     }
 }
