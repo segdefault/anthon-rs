@@ -634,7 +634,7 @@ impl MainWindow {
 
     pub fn set_edge_trigger(
         &self,
-        edge: SlintEdge,
+        updated_edge: SlintEdge,
         trigger: String,
         config: Arc<Mutex<Config>>,
         edges: Rc<VecModel<SlintEdge>>,
@@ -643,13 +643,16 @@ impl MainWindow {
         let graph = config.state_graph_mut();
 
         graph
-            .get_edge_mut(&edge.from.id, &edge.to.id)
+            .get_edge_mut(&updated_edge.from.id, &updated_edge.to.id)
             .expect("Consistency Error: Invalid edge")
             .trigger = Some(trigger.clone());
 
-        for mut other in edges.iter() {
-            if other == edge {
-                other.title = trigger.clone().into();
+        for (i, mut edge) in edges.iter().enumerate() {
+            if edge.from.id == updated_edge.from.id && edge.to.id == updated_edge.to.id {
+                edge.title = trigger.clone().into();
+                edges.remove(i);
+                edges.push(edge);
+                break;
             }
         }
     }
