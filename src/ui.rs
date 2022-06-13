@@ -174,11 +174,14 @@ impl MainWindow {
         self.on_node_type_updated({
             let window_weak = self.as_weak();
             let config_clone = Arc::clone(&config);
+            let window_model = window_model.clone();
 
             move |node| {
-                window_weak
-                    .unwrap()
-                    .node_type_updated(node, config_clone.clone());
+                window_weak.unwrap().node_type_updated(
+                    node,
+                    config_clone.clone(),
+                    window_model.nodes.clone(),
+                );
             }
         });
 
@@ -504,12 +507,7 @@ impl MainWindow {
             .expect("ERROR: Invalid node id.");
         core_node.name = String::from(node.title.clone());
 
-        for mut n in nodes.iter() {
-            if n.id == node.id {
-                n.title = node.title.clone();
-                break;
-            }
-        }
+        self.force_node_update(node, nodes);
     }
 
     fn node_moved(
@@ -549,7 +547,12 @@ impl MainWindow {
         );
     }
 
-    fn node_type_updated(&self, updated_node: SlintNode, config: Arc<Mutex<Config>>) {
+    fn node_type_updated(
+        &self,
+        updated_node: SlintNode,
+        config: Arc<Mutex<Config>>,
+        nodes: Rc<VecModel<SlintNode>>,
+    ) {
         config
             .lock()
             .unwrap()
@@ -558,6 +561,8 @@ impl MainWindow {
             .expect("Consistency Error: Invalid node ID")
             .r#type =
             StateType::from_str(updated_node.r#type.as_str()).expect("Error: Invalid state type");
+
+        self.force_node_update(updated_node, nodes);
     }
 
     fn move_edges_of(&self, node: &SlintNode, edges: Rc<VecModel<SlintEdge>>) {
@@ -568,6 +573,16 @@ impl MainWindow {
             } else if e.to.id == node.id {
                 e.to.x = node.x;
                 e.to.y = node.y;
+            }
+        }
+    }
+
+    fn force_node_update(&self, node: SlintNode, nodes: Rc<VecModel<SlintNode>>) {
+        for (i, n) in nodes.iter().enumerate() {
+            if n.id == node.id {
+                nodes.remove(i);
+                nodes.push(node);
+                break;
             }
         }
     }
