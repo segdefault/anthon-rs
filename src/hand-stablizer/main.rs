@@ -27,7 +27,7 @@ fn record(count: usize) -> Vec<Packet> {
     }
 
     (0..count)
-        .map(|i| loop {
+        .map(|_| loop {
             let frame = imageops::flip_horizontal(&camera.last_frame());
             let packet = mediapipe.process(frame);
 
