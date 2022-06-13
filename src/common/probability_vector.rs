@@ -2,26 +2,26 @@ use ordered_float::OrderedFloat;
 
 pub struct ProbabilityVector {
     probabilities: Vec<f32>,
-    sensetivity: f32,
+    sensitivity: f32,
 }
 
 impl ProbabilityVector {
-    pub fn new(capacity: usize, sensetivity: f32) -> Self {
+    pub fn new(capacity: usize, sensitivity: f32) -> Self {
         let mut vec = Vec::with_capacity(capacity);
         let init_val = (1f64 / capacity as f64) as f32;
 
         (0..capacity).for_each(|_| vec.push(init_val));
         ProbabilityVector {
             probabilities: vec,
-            sensetivity,
+            sensitivity,
         }
     }
 
     pub fn adjust(&mut self, index: usize) {
-        let inverse = 1f32 - self.sensetivity;
+        let inverse = 1f32 - self.sensitivity;
 
         self.probabilities = self.probabilities.iter().map(|n| n * inverse).collect();
-        self.probabilities[index] += self.sensetivity;
+        self.probabilities[index] += self.sensitivity;
 
         // Adjust floating-point errors
         // let sum: f32 = self.probabilities.iter().sum();
@@ -30,7 +30,7 @@ impl ProbabilityVector {
     }
 
     pub fn rebalance(&mut self) {
-        let inverse = 1f32 - self.sensetivity;
+        let inverse = 1f32 - self.sensitivity;
         let expected_val = (1f64 / self.probabilities.len() as f64) as f32;
 
         self.probabilities = self
