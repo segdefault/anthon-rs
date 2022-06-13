@@ -507,6 +507,7 @@ impl MainWindow {
         for mut n in nodes.iter() {
             if n.id == node.id {
                 n.title = node.title.clone();
+                break;
             }
         }
     }
