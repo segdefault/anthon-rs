@@ -160,12 +160,26 @@ impl MainWindow {
             }
         });
 
-        let window_weak = self.as_weak();
-        let config_clone = Arc::clone(&config);
-        self.on_node_command_updated(move |node, command| {
-            window_weak
-                .unwrap()
-                .update_node_command(node, command, config_clone.clone());
+        self.on_node_command_updated({
+            let window_weak = self.as_weak();
+            let config_clone = Arc::clone(&config);
+
+            move |node, command| {
+                window_weak
+                    .unwrap()
+                    .update_node_command(node, command, config_clone.clone());
+            }
+        });
+
+        self.on_node_type_updated({
+            let window_weak = self.as_weak();
+            let config_clone = Arc::clone(&config);
+
+            move |node| {
+                window_weak
+                    .unwrap()
+                    .node_type_updated(node, config_clone.clone());
+            }
         });
 
         self.on_add_edge({
@@ -532,6 +546,17 @@ impl MainWindow {
             StateEvent::from_str(command.title.as_str()).unwrap(),
             (&command).into(),
         );
+    }
+
+    fn node_type_updated(&self, updated_node: SlintNode, config: Arc<Mutex<Config>>) {
+        config
+            .lock()
+            .unwrap()
+            .state_graph_mut()
+            .get_node_mut(&updated_node.id)
+            .expect("Consistency Error: Invalid node ID")
+            .r#type =
+            StateType::from_str(updated_node.r#type.as_str()).expect("Error: Invalid state type");
     }
 
     fn move_edges_of(&self, node: &SlintNode, edges: Rc<VecModel<SlintEdge>>) {

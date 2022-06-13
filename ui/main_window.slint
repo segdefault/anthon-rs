@@ -34,6 +34,7 @@ export MainWindow := Window {
     callback rename-node(Node);
     callback node-moved(Node);
     callback node-command-updated(Node, Command);
+    callback node-type-updated(Node);
 
     callback add-edge(Node, Node);
     callback delete-edge(Edge);
@@ -137,6 +138,7 @@ export MainWindow := Window {
                     rename-node(node) => { root.rename-node(node) }
                     node-moved(node) => { root.node-moved(node) }
                     node-command-updated(node, cmd) => { root.node-command-updated(node, cmd) }
+                    node-type-updated(node) => { root.node-type-updated(node) }
 
                     add-edge(from, to) => { root.add-edge(from, to) }
                     delete-edge(edge) => { root.delete-edge(edge) }

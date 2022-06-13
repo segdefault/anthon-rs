@@ -13,7 +13,7 @@ use crate::common::{Axis, Command, ScrollCommand};
 mod conditional_edge;
 mod state_machine;
 
-#[derive(Serialize, Deserialize, PartialEq, Display, EnumIter)]
+#[derive(Serialize, Deserialize, PartialEq, Display, EnumIter, EnumString)]
 pub enum StateType {
     Basic,
     Pointing,

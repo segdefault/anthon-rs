@@ -191,6 +191,7 @@ export StateGraphPage := Page {
     callback rename-node(Node);
     callback node-moved(Node);
     callback node-command-updated(Node, Command);
+    callback node-type-updated(Node);
 
     callback add-edge(Node, Node);
     callback delete-edge(Edge);
@@ -347,6 +348,11 @@ export StateGraphPage := Page {
         command-updated(idx, cmd) => {
             node.commands[idx] = cmd;
             root.node-command-updated(node, cmd);
+        }
+
+        type-selected(type) => {
+            node.type = type;
+            root.node-type-updated(node);
         }
     }
 }

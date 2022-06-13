@@ -80,10 +80,23 @@ impl Core {
         });
     }
 
+    fn update_pointer_freeze(&mut self) {
+        let config = self.config.lock().unwrap();
+
+        let current_state = config
+            .state_graph()
+            .get_node(self.state_machine.current_state())
+            .unwrap();
+        self.pointer_tracker.freeze = !current_state.r#type.eq(&StateType::Pointing);
+    }
+
     pub fn tick(&mut self) {
+        self.update_pointer_freeze();
+
         let config = self.config.lock().unwrap();
         let frame = imageops::flip_horizontal(&self.camera.last_frame());
         let packet = self.mediapipe.process(frame);
+
         self.pointer_tracker
             .track(&packet)
             .expect("ERROR: Tracking error.");
@@ -113,12 +126,6 @@ impl Core {
                         &mut self.pointer_tracker,
                     );
                     if state_updated {
-                        let new_state = config
-                            .state_graph()
-                            .get_node(self.state_machine.current_state())
-                            .unwrap();
-                        self.pointer_tracker.freeze = new_state.r#type.eq(&StateType::Pointing);
-
                         MainWindow::update_active_node_id(
                             self.window.clone(),
                             *self.state_machine.current_state(),
