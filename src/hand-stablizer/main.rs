@@ -32,7 +32,6 @@ fn record(count: usize) -> Vec<Packet> {
             let packet = mediapipe.process(frame);
 
             if packet.landmarks.is_some() {
-                println!("{}", count - i);
                 break packet;
             } else {
                 thread::sleep(Duration::from_millis(anthon_rs::MPF));

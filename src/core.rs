@@ -124,7 +124,6 @@ impl Core {
                             *self.state_machine.current_state(),
                         );
                     }
-                    println!("{}: {}", probable_sign.0, probable_sign.1);
                 }
             }
         } else {

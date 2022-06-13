@@ -438,7 +438,6 @@ impl MainWindow {
     fn add_node(&self, x: f32, y: f32, config: Arc<Mutex<Config>>, nodes: Rc<VecModel<SlintNode>>) {
         let mut config = config.lock().unwrap();
         let mut state = config.new_state();
-        println!("ADDING NODE WITH ID: {}", state.id());
 
         state.x = x;
         state.y = y;
@@ -460,7 +459,6 @@ impl MainWindow {
         let nodes = window_model.nodes();
         let edges = window_model.edges();
         let mut config = config.lock().unwrap();
-        println!("DELETING NODE WITH ID: {}", node.id);
 
         config.state_graph_mut().delete_node(&node.id);
 
@@ -537,15 +535,11 @@ impl MainWindow {
     }
 
     fn move_edges_of(&self, node: &SlintNode, edges: Rc<VecModel<SlintEdge>>) {
-        println!("{:?}", node);
-
         for mut e in edges.iter() {
             if e.from.id == node.id {
-                println!("hit");
                 e.from.x = node.x;
                 e.from.y = node.y;
             } else if e.to.id == node.id {
-                println!("hit");
                 e.to.x = node.x;
                 e.to.y = node.y;
             }
