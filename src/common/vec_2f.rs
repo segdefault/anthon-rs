@@ -1,5 +1,7 @@
 use std::ops;
 
+use crate::common::Point2F;
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Vec2F {
@@ -8,28 +10,28 @@ pub struct Vec2F {
 }
 
 impl Vec2F {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+
     pub fn dot(&self, other: &Vec2F) -> f32 {
         self.x * other.x + self.y * other.y
     }
 
-    pub fn distance(&self, other: &Vec2F) -> f32 {
-        let x = (self.x - other.x).powf(2f32);
-        let y = (self.y - other.y).powf(2f32);
+    pub fn angle(&self, other: &Vec2F) -> f32 {
+        let dot = self.dot(other);
 
-        (y + x).sqrt()
+        (dot / self.magnitude() / other.magnitude()).acos()
     }
 
-    pub fn angle(a: &Vec2F, b: &Vec2F, c: &Vec2F) -> f32 {
-        let line_a = a - b;
-        let line_b = c - b;
+    pub fn magnitude(&self) -> f32 {
+        self.dot(self).sqrt()
+    }
+}
 
-        let dot_product = line_a.dot(&line_b);
-        let magnitude_a = line_a.dot(&line_a).sqrt();
-        let magnitude_b = line_b.dot(&line_b).sqrt();
-
-        let cos = (dot_product / magnitude_a / magnitude_b).acos();
-
-        cos.to_degrees()
+impl Default for Vec2F {
+    fn default() -> Self {
+        Self { x: 0f32, y: 0f32 }
     }
 }
 
@@ -51,6 +53,27 @@ impl ops::Sub<&Vec2F> for &Vec2F {
         Vec2F {
             x: self.x - other.x,
             y: self.y - other.y,
+        }
+    }
+}
+
+impl From<Point2F> for Vec2F {
+    fn from(p: Point2F) -> Self {
+        Vec2F { x: p.x, y: p.y }
+    }
+}
+
+impl From<Vec2F> for Point2F {
+    fn from(v: Vec2F) -> Self {
+        Point2F { x: v.x, y: v.y }
+    }
+}
+
+impl From<(Point2F, Point2F)> for Vec2F {
+    fn from(v: (Point2F, Point2F)) -> Self {
+        Vec2F {
+            x: v.1.x - v.0.x,
+            y: v.1.y - v.0.y,
         }
     }
 }

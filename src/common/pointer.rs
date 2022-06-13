@@ -3,7 +3,7 @@ use std::{thread, time::Duration};
 use tfc::{Context, Error, MouseContext, ScreenContext};
 
 use crate::common::filter::Wmaf32;
-use crate::common::{Rectangle, Vec2F};
+use crate::common::{Point2F, Rectangle};
 use crate::mediapipe::Packet;
 
 // TODO: Move these to the config file
@@ -120,7 +120,7 @@ impl PointerTracker {
         Ok(())
     }
 
-    fn update_virtual_screen(&mut self, landmarks: &[Vec2F]) -> Result<(), Error> {
+    fn update_virtual_screen(&mut self, landmarks: &[Point2F]) -> Result<(), Error> {
         let v_size = ((landmarks[5].x - landmarks[17].x).abs() * PRECISION_FACTOR).min(1f32);
 
         self.virtual_screen

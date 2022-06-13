@@ -2,7 +2,7 @@ use image::{ImageBuffer, Rgb};
 use libc::{c_void, size_t};
 use slint::{Rgb8Pixel, SharedPixelBuffer};
 
-use crate::common::Vec2F;
+use crate::common::Point2F;
 
 #[link(name = "mediapipe")]
 extern "C" {
@@ -21,12 +21,12 @@ struct FFIPacket {
     // image_len: size_t,
     // image: *const u8,
     landmarks_len: size_t,
-    landmarks: *mut Vec2F,
+    landmarks: *mut Point2F,
 }
 
 pub struct Packet {
     pub image_buffer: SharedPixelBuffer<Rgb8Pixel>,
-    pub landmarks: Option<Vec<Vec2F>>,
+    pub landmarks: Option<Vec<Point2F>>,
 }
 
 pub struct Mediapipe {

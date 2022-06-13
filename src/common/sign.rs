@@ -9,7 +9,7 @@ use strum::EnumCount;
 use strum::IntoEnumIterator;
 use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 
-use crate::common::{Circle, Vec2F};
+use crate::common::{Circle, Point2F, Vec2F};
 
 use super::BitString;
 
@@ -122,23 +122,24 @@ impl fmt::Display for Sign {
     }
 }
 
-impl From<&[Vec2F]> for Sign {
-    fn from(landmarks: &[Vec2F]) -> Self {
+impl From<&[Point2F]> for Sign {
+    fn from(landmarks: &[Point2F]) -> Self {
         let mut features = HashMap::new();
-        let palm_circle = Circle::new(&[landmarks[0], landmarks[5], landmarks[17]]);
+        let palm_circle = Circle::from(vec![landmarks[0], landmarks[5], landmarks[17]].as_ref());
 
-        let hand_angle = Vec2F::angle(
-            &landmarks[17],
-            &landmarks[0],
-            &Vec2F {
-                x: landmarks[0].x,
-                y: 1f32,
-            },
-        );
-        let thumb_index_angle = Vec2F::angle(&landmarks[4], &landmarks[0], &landmarks[5]);
-        let index_middle_angle = Vec2F::angle(&landmarks[8], &landmarks[5], &landmarks[12]);
-        let middle_ring_angle = Vec2F::angle(&landmarks[12], &landmarks[9], &landmarks[16]);
-        let ring_pinky_angle = Vec2F::angle(&landmarks[16], &landmarks[13], &landmarks[20]);
+        let hand_angle = Vec2F::from((landmarks[0], landmarks[17])).angle(&Vec2F {
+            x: landmarks[0].x,
+            y: 1f32,
+        });
+
+        let thumb_index_angle = Vec2F::from((landmarks[0], landmarks[4]))
+            .angle(&Vec2F::from((landmarks[0], landmarks[5])));
+        let index_middle_angle = Vec2F::from((landmarks[5], landmarks[8]))
+            .angle(&Vec2F::from((landmarks[5], landmarks[12])));
+        let middle_ring_angle = Vec2F::from((landmarks[9], landmarks[12]))
+            .angle(&Vec2F::from((landmarks[9], landmarks[16])));
+        let ring_pinky_angle = Vec2F::from((landmarks[13], landmarks[16]))
+            .angle(&Vec2F::from((landmarks[13], landmarks[20])));
 
         features.insert(
             Feature::IndexClosed,
