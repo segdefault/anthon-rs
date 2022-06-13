@@ -371,6 +371,7 @@ impl MainWindow {
                 .collect::<Vec<SlintSign>>(),
         );
 
+        self.set_signs(signs.into());
         self.refresh_triggers(config);
     }
 
