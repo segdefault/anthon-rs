@@ -90,8 +90,25 @@ impl Core {
         self.pointer_tracker.freeze = !current_state.r#type.eq(&StateType::Pointing);
     }
 
+    fn check_sign_count_update(&mut self) {
+        let (num_signs, probability_vector_sensitivity) = {
+            let config = self.config.lock().unwrap();
+
+            (
+                config.sign_dictionary().signs().len(),
+                config.sign_switching_smoothness,
+            )
+        };
+
+        if num_signs != self.probability_vector.probabilities().len() {
+            self.probability_vector =
+                ProbabilityVector::new(num_signs, probability_vector_sensitivity);
+        }
+    }
+
     pub fn tick(&mut self) {
         self.update_pointer_freeze();
+        self.check_sign_count_update();
 
         let config = self.config.lock().unwrap();
         let frame = imageops::flip_horizontal(&self.camera.last_frame());

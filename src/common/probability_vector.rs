@@ -17,6 +17,10 @@ impl ProbabilityVector {
         }
     }
 
+    pub fn probabilities(&self) -> &[f32] {
+        self.probabilities.as_ref()
+    }
+
     pub fn adjust(&mut self, index: usize) {
         let inverse = 1f32 - self.sensitivity;
 
