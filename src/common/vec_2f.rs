@@ -77,3 +77,37 @@ impl From<(Point2F, Point2F)> for Vec2F {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::f32::consts::PI;
+
+    use crate::common::Vec2F;
+
+    #[test]
+    fn test_vec2f_angle_perpendicular() {
+        let a = Vec2F::new(0f32, 1f32);
+        let b = Vec2F::new(1f32, 0f32);
+        let angle = a.angle(&b);
+
+        assert_eq!(angle, PI / 2f32)
+    }
+
+    #[test]
+    fn test_vec2f_angle_parallel() {
+        let a = Vec2F::new(0f32, 1f32);
+        let b = Vec2F::new(0f32, 2f32);
+        let angle = a.angle(&b);
+
+        assert_eq!(angle, 0f32)
+    }
+
+    #[test]
+    fn test_vec2f_angle_parallel_opposite() {
+        let a = Vec2F::new(0f32, 1f32);
+        let b = Vec2F::new(0f32, -1f32);
+        let angle = a.angle(&b);
+
+        assert_eq!(angle, PI)
+    }
+}

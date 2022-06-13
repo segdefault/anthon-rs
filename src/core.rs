@@ -104,7 +104,6 @@ impl Core {
         if let Some(landmarks) = packet.landmarks {
             let sign: Sign = landmarks.as_slice().into();
             let similar = config.sign_dictionary().find_similar(&sign);
-            // println!("{:?}", sign);
 
             if let Some(similar) = similar {
                 self.probability_vector.adjust(similar.index);

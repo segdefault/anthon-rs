@@ -128,23 +128,20 @@ impl From<&[Point2F]> for Sign {
         let palm_circle = Circle::from(vec![landmarks[0], landmarks[5], landmarks[17]].as_ref());
 
         let hand_angle = Vec2F::from((landmarks[0], landmarks[17]))
-            .angle(&Vec2F {
-                x: landmarks[0].x,
-                y: 1f32,
-            })
+            .angle(&Vec2F { x: 0f32, y: 1f32 })
             .to_degrees();
 
         let thumb_index_angle = Vec2F::from((landmarks[0], landmarks[4]))
             .angle(&Vec2F::from((landmarks[0], landmarks[5])))
             .to_degrees();
         let index_middle_angle = Vec2F::from((landmarks[5], landmarks[8]))
-            .angle(&Vec2F::from((landmarks[5], landmarks[12])))
+            .angle(&Vec2F::from((landmarks[9], landmarks[12])))
             .to_degrees();
         let middle_ring_angle = Vec2F::from((landmarks[9], landmarks[12]))
-            .angle(&Vec2F::from((landmarks[9], landmarks[16])))
+            .angle(&Vec2F::from((landmarks[13], landmarks[16])))
             .to_degrees();
         let ring_pinky_angle = Vec2F::from((landmarks[13], landmarks[16]))
-            .angle(&Vec2F::from((landmarks[13], landmarks[20])))
+            .angle(&Vec2F::from((landmarks[17], landmarks[20])))
             .to_degrees();
 
         features.insert(
@@ -165,23 +162,23 @@ impl From<&[Point2F]> for Sign {
         );
         features.insert(
             Feature::HandRotated,
-            FeatureState::Exists(hand_angle < 140f32),
+            FeatureState::Exists(hand_angle < 120f32),
         );
         features.insert(
             Feature::ThumbIndexSpread,
-            FeatureState::Exists(thumb_index_angle < 20f32),
+            FeatureState::Exists(thumb_index_angle > 10f32),
         );
         features.insert(
             Feature::IndexMiddleSpread,
-            FeatureState::Exists(index_middle_angle < 15f32),
+            FeatureState::Exists(index_middle_angle > 10f32),
         );
         features.insert(
             Feature::MiddleRingSpread,
-            FeatureState::Exists(middle_ring_angle < 15f32),
+            FeatureState::Exists(middle_ring_angle > 10f32),
         );
         features.insert(
             Feature::RingPinkySpread,
-            FeatureState::Exists(ring_pinky_angle < 20f32),
+            FeatureState::Exists(ring_pinky_angle > 10f32),
         );
 
         features.into()
