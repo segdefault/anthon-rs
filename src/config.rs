@@ -143,7 +143,7 @@ impl Default for Config {
             state_graph,
             last_node_id: INITIAL_STATE_INDEX,
 
-            sign_switching_smoothness: 0.5f32,
+            sign_switching_smoothness: 1f32,
             sign_probability_threshold: 0.9f32,
         }
     }
