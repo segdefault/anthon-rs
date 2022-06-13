@@ -1,0 +1,352 @@
+import { LineEdit, ComboBox } from "std-widgets.slint";
+import { Palette, Page, IconButton } from "common.slint";
+import { Graph, Command, Node, Edge, DrawableNode, CommandBox } from "widgets/graph.slint";
+
+ConfigPanel := Rectangle {
+    border-radius: 16px;
+    clip: true;
+
+    // Disable click-through
+    TouchArea { }
+
+    Rectangle {
+        background: Palette.main-background;
+    }
+}
+
+EdgeConfigPanel := ConfigPanel {
+    property <Edge> edge;
+    property <[string]> triggers;
+
+    callback trigger-selected(string);
+    callback force-edge-update(Edge);
+    force-edge-update(edge) => {
+        root.edge = edge;
+        trigger-box.current-value = edge.title;
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 16px;
+        alignment: start;
+
+        Rectangle {
+            height: from.height;
+
+            from := DrawableNode {
+                x: 0px;
+                y: 0px;
+                width: min(root.width, 64px);
+                node: edge.from;
+            }
+
+            to := DrawableNode {
+                x: parent.width - width;
+                y: 0px;
+                width: min(root.width, 64px);
+                node: edge.to;
+            }
+
+            arrow-line := Rectangle {
+                x: from.x + from.width;
+                y: from.height / 2;
+                width: arrow-head.x - x;
+                height: 2px;
+                background: Palette.control-outline-color;
+            }
+
+            arrow-head := Path {
+                x: to.x - width;
+                y: to.y + (to.height - height + arrow-line.height) /2;
+                width: 10px;
+                height: width;
+                fill: arrow-line.background;
+                commands: "M 0 0 L 0 100 L 100 50 Z";
+            }
+
+            Text {
+                width: parent.width;
+                horizontal-alignment: center;
+                text: edge.title;
+                color: white;
+            }
+        }
+
+        Rectangle {
+            background: Palette.separator-color;
+            height: 1px;
+        }
+
+        HorizontalLayout {
+            spacing: 16px;
+            Text {
+                text: "Trigger";
+                color: white;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                horizontal-stretch: 0;
+            }
+            trigger-box := ComboBox {
+                model: triggers;
+                horizontal-stretch: 1;
+                current-value: edge.title;
+                selected(trigger) => {
+                    root.trigger-selected(trigger);
+                    edge.title = trigger;
+                }
+            }
+        }
+    }
+}
+
+NodeConfigPanel := ConfigPanel {
+    property <Node> node;
+    property <[string]> node-types;
+    property <[string]> command-types;
+    property <[string]> mouse-buttons;
+    property <[string]> key-events;
+    property <[string]> axes;
+
+    callback name-edited(string);
+    callback force-node-update(Node);
+    callback type-selected(string);
+
+    callback command-updated(int, Command);
+
+    force-node-update(node) => {
+        root.node = node;
+        line-edit.text = node.title;
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 32px;
+        alignment: start;
+
+        Rectangle { 
+            height: drawable-node.height;
+
+            drawable-node := DrawableNode {
+                x: (parent.width - width)/2;
+                y: 0px;
+                width: min(root.width, 64px);
+                node: root.node;
+            }
+        }
+
+        Rectangle {
+            background: Palette.separator-color;
+            height: 1px;
+        }
+
+        line-edit := LineEdit {
+            text: node.title;
+            placeholder-text: "Node name";
+
+            edited(new-title) => {
+                node.title = new-title;
+                root.name-edited(new-title);
+            }
+        }
+
+        ComboBox {
+            model: node-types;
+            current-value: node.type;
+
+            selected(type) => { root.type-selected(type) }
+        }
+
+        for command[idx] in node.commands : CommandBox {
+            command: command;
+            command-types: root.command-types;
+            mouse-buttons: root.mouse-buttons;
+            key-events: root.key-events;
+            axes: root.axes;
+
+            updated(cmd) => {
+                node.commands[idx] = cmd;
+                root.command-updated(idx, cmd);
+            }
+        }
+    }
+}
+
+export StateGraphPage := Page {
+    property <[Node]> nodes;
+    property <[Edge]> edges;
+    property <[string]> node-types <=> node-config-panel.node-types;
+    property <[string]> command-types <=> node-config-panel.command-types;
+    property <[string]> mouse-buttons <=> node-config-panel.mouse-buttons;
+    property <[string]> key-events <=> node-config-panel.key-events;
+    property <[string]> axes <=> node-config-panel.axes;
+    property <[string]> triggers <=> edge-config-panel.triggers;
+    property <int> active-node-id <=> graph.active-node-id;
+    property <string> selected-tool: "default";
+
+    property <Node> linking-from;
+    property <bool> linking: false;
+
+    callback add-node(length, length);
+    callback delete-node(Node);
+    callback rename-node(Node);
+    callback node-moved(Node);
+    callback node-command-updated(Node, Command);
+
+    callback add-edge(Node, Node);
+    callback delete-edge(Edge);
+    callback set-edge-trigger(Edge, string);
+
+    header: "State Graph";
+
+    graph-tool-bar := HorizontalLayout { 
+        width: parent.width - 32px;
+        alignment: end;
+        
+        IconButton { 
+            width: 32px;
+            height: width;
+
+            icon: @image-url("images/cursor-default.svg");
+            fill-color: white;
+            icon-color: Palette.control-foreground;
+            border-color: selected-tool == "default" ? Palette.control-secondary : fill-color;
+            clicked => { 
+                selected-tool = "default";
+            }
+        }
+        IconButton { 
+            width: 32px;
+            height: width;
+
+            icon: @image-url("images/plus.svg");
+            fill-color: white;
+            icon-color: Palette.control-foreground;
+            border-color: selected-tool == "add" ? Palette.control-secondary : fill-color;
+            clicked => { 
+                selected-tool = "add";
+            }
+        }
+        IconButton { 
+            width: 32px;
+            height: width;
+
+            icon: @image-url("images/delete.svg");
+            fill-color: white;
+            icon-color: Palette.control-foreground;
+            border-color: selected-tool == "delete" ? Palette.control-secondary : fill-color;
+            clicked => { 
+                selected-tool = "delete";
+            }
+        }
+        IconButton { 
+            width: 32px;
+            height: width;
+
+            icon: @image-url("images/ray-start-arrow.svg");
+            fill-color: white;
+            icon-color: Palette.control-foreground;
+            border-color: selected-tool == "edge_creator" ? Palette.control-secondary : fill-color;
+            clicked => { 
+                selected-tool = "edge_creator";
+                linking = false;
+            }
+        }
+    }
+
+    graph := Graph {
+        nodes: root.nodes;
+        edges: root.edges;
+
+        x: (parent.width - width) / 2;
+        y: Palette.header-y-margin;
+        width: parent.width;
+        height: parent.height;
+        x-offset: width/2;
+        y-offset: height/2;
+
+        node-clicked(node) => {
+            if (selected-tool == "default") {
+                node-config-panel.force-node-update(node);
+                node-config-panel.hidden = false;
+                edge-config-panel.hidden = true;
+            } else if (selected-tool == "delete") {
+                if (node-config-panel.node.id == node.id) {
+                    node-config-panel.hidden = true;
+                    edge-config-panel.hidden = true;
+                }
+
+                root.delete-node(node);
+            } else if (selected-tool == "edge_creator") {
+                if (linking) {
+                    add-edge(linking-from, node);
+                    linking = false;
+                } else {
+                    linking-from = node;
+                    linking = true;
+                }
+            }
+        }
+
+        node-moved(node) => {
+            if (selected-tool == "default") {
+                root.node-moved(node);
+            }
+        }
+
+        edge-clicked(edge) => {
+            if (selected-tool == "default") {
+                edge-config-panel.force-edge-update(edge);
+                edge-config-panel.hidden = false;
+                node-config-panel.hidden = true;
+            } else if (selected-tool == "delete") {
+                root.delete-edge(edge);
+            }
+        }
+
+        clicked(x, y) => { 
+            if (selected-tool == "default") {
+                node-config-panel.hidden = true;
+                edge-config-panel.hidden = true;
+            } else if (selected-tool == "add") {
+                add-node(x - Palette.node-size / 2, y - Palette.node-size/2)
+            }
+        }
+    }
+
+    edge-config-panel := EdgeConfigPanel {
+        property <bool> hidden: true;
+
+        width: hidden ? 0px : parent.width * 20%;
+        height: parent.height - y;
+        y: 64px;
+        x: hidden ? parent.width : parent.width - width;
+
+        animate x { duration: 128ms; easing: ease; }
+        animate width { duration: 128ms; easing: ease; }
+
+        trigger-selected(trigger) => { root.set-edge-trigger(edge, trigger) }
+    }
+
+    node-config-panel := NodeConfigPanel { 
+        property <bool> hidden: true;
+
+        width: hidden ? 0px : parent.width * 20%;
+        height: parent.height - y;
+        y: 64px;
+        x: hidden ? parent.width : parent.width - width;
+
+        animate x { duration: 128ms; easing: ease; }
+        animate width { duration: 128ms; easing: ease; }
+
+        name-edited(new-title) => {
+            node.title = new-title;
+
+            root.rename-node(node)
+        }
+
+        command-updated(idx, cmd) => {
+            node.commands[idx] = cmd;
+            root.node-command-updated(node, cmd);
+        }
+    }
+}

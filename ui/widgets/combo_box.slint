@@ -1,0 +1,148 @@
+global Palette := {
+    property<color> themeDarker: #004578;
+    property<color> themeDark: #005a9e;
+    property<color> themeDarkAlt: #106ebe;
+    property<color> themePrimary: #0078d4;
+    property<color> themeSecondary: #2b88d8;
+    property<color> themeTertiary: #71afe5;
+    property<color> themeLight: #c7e0f4;
+    property<color> themeLighter: #deecf9;
+    property<color> themeLighterAlt: #eff6fc;
+    property<color> black: #000000;
+    property<color> blackTranslucent40: rgba(0,0,0,0.4);
+    property<color> neutralDark: #201f1e;
+    property<color> neutralPrimary: #323130;
+    property<color> neutralPrimaryAlt: #3b3a39;
+    property<color> neutralSecondary: #605e5c;
+    property<color> neutralSecondaryAlt: #8a8886;
+    property<color> neutralTertiary: #a19f9d;
+    property<color> neutralTertiaryAlt: #c8c6c4;
+    property<color> neutralQuaternary: #d2d0ce;
+    property<color> neutralQuaternaryAlt: #e1dfdd;
+    property<color> neutralLight: #edebe9;
+    property<color> neutralLighter: #f3f2f1;
+    property<color> neutralLighterAlt: #faf9f8;
+    property<color> accent: #0078d4;
+    property<color> white: #ffffff;
+    property<color> whiteTranslucent40: rgba(255,255,255,0.4);
+    property<color> yellowDark: #d29200;
+    property<color> yellow: #ffb900;
+    property<color> yellowLight: #fff100;
+    property<color> orange: #d83b01;
+    property<color> orangeLight: #ea4300;
+    property<color> orangeLighter: #ff8c00;
+    property<color> redDark: #a4262c;
+    property<color> red: #e81123;
+    property<color> magentaDark: #5c005c;
+    property<color> magenta: #b4009e;
+    property<color> magentaLight: #e3008c;
+    property<color> purpleDark: #32145a;
+    property<color> purple: #5c2d91;
+    property<color> purpleLight: #b4a0ff;
+    property<color> blueDark: #002050;
+    property<color> blueMid: #00188f;
+    property<color> blue: #0078d4;
+    property<color> blueLight: #00bcf2;
+    property<color> tealDark: #004b50;
+    property<color> teal: #008272;
+    property<color> tealLight: #00b294;
+    property<color> greenDark: #004b1c;
+    property<color> green: #107c10;
+    property<color> greenLight: #bad80a;
+}
+
+export ComboBox := FocusScope {
+    property <[string]> model;
+    property <int> current-index : -1;
+    property <string> current-value;
+    //property <bool> is-open: false;
+    callback selected(string);
+
+    Rectangle {
+        background: !enabled ? Palette.neutralLighter : Palette.white;
+        border-radius: 2px;
+        border-width: !enabled ? 0px : has-focus ? 3px : 1px;
+        border-color: !enabled ? Palette.neutralLighter
+            : has-focus ? Palette.themeSecondary
+            : Palette.neutralPrimary;
+    }
+
+
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
+    min-width: 170px;
+    min-height: max(32px, l.min-height);
+
+    l := HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-bottom: 3px;
+        padding-top: 3px;
+        spacing: 8px;
+        t := Text {
+            text <=> root.current-value;
+            horizontal-alignment: left;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            color: !enabled ? Palette.neutralTertiary
+                : root.has-focus || touch.has-hover ? Palette.neutralPrimary
+                : Palette.neutralSecondary;
+            min-width: 0;
+        }
+        Rectangle {
+            width: 25px;
+            Path {
+                x: (parent.width - width) / 2;
+                y: (parent.height - height) / 2;
+                height: 8px;
+                width: 25px;
+                commands: "M21.8,311.1l84.2-82.1c15.7-15.2,41-15.2,56.7,0l341.1,304.1l333.7-297.5c15.5-15.2,41-15.2,56.6,0l84.3,82.1c15.6,15.2,15.6,40,0,55.2L531.7,771c-15.7,15.3-41,15.3-56.7,0l-6.9-6.7L21.8,366.3C6.1,351,6.1,326.3,21.8,311.1z";
+                fill: t.color;
+            }
+        }
+
+    }
+
+    touch := TouchArea {
+        clicked => {
+            root.focus();
+            popup.show();
+        }
+    }
+
+    popup := PopupWindow {
+        x: root.x;
+        y: root.height;
+        width: root.width;
+        Rectangle {
+            border-color: Palette.neutralLighter;
+            border-width: 1px;
+            /*drop-shadow-color: Palette.neutralTertiary;
+            drop-shadow-blur: 5px;*/
+            background: Palette.white;
+        }
+        VerticalLayout {
+            for value[idx] in root.model: Rectangle {
+                background: idx == root.current-index ? Palette.neutralLighter
+                    : item-area.has-hover ? Palette.neutralLighterAlt : transparent;
+                VerticalLayout {
+                    padding: 10px;
+                    Text {
+                        text: value;
+                    }
+                }
+                item-area := TouchArea {
+                    width: 100%;
+                    height: 100%;
+                    clicked => {
+                        if (root.enabled) {
+                            root.current-index = idx;
+                            root.current-value = value;
+                            root.selected(root.current-value);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

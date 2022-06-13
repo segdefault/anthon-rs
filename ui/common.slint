@@ -1,0 +1,293 @@
+struct ButtonColors := {
+    base: color,
+    pressed: color,
+    hovered: color,
+}
+
+export global Palette := {
+    property <color> active-page-icon-color: night-mode ? #6284FF : #122F7B;
+    property <color> inactive-page-icon-color: #BDC0D1;
+
+    property <color> main-background: #0E133F;
+    property <color> secondary-background: #6284FF;
+    property <color> neutral-box: #BDC0D1;
+
+    property <color> page-background-color: night-mode ? #122F7B : white;
+
+    property <color> text-foreground-color: night-mode ? #F4F6FF : black;
+    property <color> secondary-foreground-color: #6C6E7A; // FIXME: night mode
+
+    property <color> printer-action-background-color: night-mode ? main-background : white;
+    property <color> printer-queue-item-background-color: page-background-color;
+
+    property <color> status-label-text-color: night-mode ? #F1FF98 : #6284FF;
+
+    property <color> control-outline-color: #FFBF63;
+    property <color> control-outline-color-active: #BFFF63;
+    property <color> control-secondary: #6284FF;
+    property <color> control-foreground: night-mode ? white : #122F7B;  // FIXME: the night mode color was not part of the design
+    property <color> control-foreground-darker: control-foreground.darker(20%);
+
+    property <color> graph-node-background: #122F7B;
+    property <color> graph-node-foreground: #F4F6FF;
+
+    property <color> primary-push-button-base: #6284FF;
+    property <ButtonColors> primary-push-button-colors: {
+        base: primary-push-button-base,
+        pressed: primary-push-button-base.darker(40%),
+        hovered: primary-push-button-base.darker(20%),
+    };
+
+    property <color> secondary-push-button-base: #FFBF63;
+    property <ButtonColors> secondary-push-button-colors: {
+        base: secondary-push-button-base,
+        pressed: secondary-push-button-base.darker(40%),
+        hovered: secondary-push-button-base.darker(20%),
+    };
+
+    property <color> list-header-color: #C0C0D5;
+    property <color> list-item-color: list-header-color.brighter(20%);
+    property <color> list-item-darker-color: list-header-color.brighter(10%);
+
+
+    property <color> push-button-text-color: white;
+    property <color> separator-color: #6284FF;
+
+    property <length> border-radius: 32px;
+    property <length> base-font-size: 16px;
+    property <string> base-font-family: "Noto Sans";
+
+    property <length> sign-dict-name-column-width: 128px;
+    property <length> sign-dict-column-width: 72px;
+
+    property <bool> night-mode: false;
+
+    property <length> header-y-margin: 96px;
+    property <length> node-size: 64px;
+}
+
+export Page := Rectangle {
+    property<string> header <=> h.text;
+    background: Palette.page-background-color;
+    property <bool> has-back-button: false;
+    callback back;
+
+    TouchArea {} // protect underneath controls
+
+    if (has-back-button) : Image {
+        source: @image-url("images/back.svg");
+        image-fit: contain;
+        colorize: Palette.control-secondary;
+        y: h.y + (h.height - height) / 2;
+        width: 14px;
+        height: 24px;
+        TouchArea {
+            clicked => { back() }
+            width: 150%;
+        }
+    }
+
+    h := Text {
+        font-weight: 900;
+        font-size: Palette.base-font-size * 2;
+        color: Palette.text-foreground-color;
+        y: 46px - font-size;
+        x: has-back-button ? 24px + 16px : 32px;
+        // Allow clicking on the title as well to get back easier when just
+        // using fingers on a small screen.
+        if (has-back-button) : TouchArea {
+            clicked => { back() }
+        }
+    }
+}
+export Label := Text {
+    color: Palette.text-foreground-color;
+    vertical-alignment: center;
+    font-weight: 700;
+    vertical-stretch: 0;
+}
+
+export FilledButton := Rectangle {
+    callback clicked;
+    property <image> icon;
+    property <color> fill-color: Palette.control-outline-color;
+
+    border-radius: 1px;
+    border-width: 2px;
+    border-color: (touch.has-hover || touch.pressed) ? fill-color.darker(20%) : fill-color.brighter(20%);
+    background: (touch.has-hover || touch.pressed) ? fill-color.darker(20%) : fill-color;
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    Image {
+        height: 80%;
+        width: 80%;
+        x: (parent.width - width)/2;
+        y: (parent.height - height)/2;
+        source <=> root.icon;
+        image-fit: contain;
+        colorize: white;
+    }
+}
+
+export IconButton := Rectangle {
+    callback clicked;
+    property <image> icon;
+    property <color> icon-color;
+    property <color> fill-color;
+
+    border-radius: 1px;
+    border-width: 2px;
+    background: touch.has-hover ? (touch.pressed ? icon-color.darker(20%) : icon-color) : fill-color;
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    Image {
+        height: 80%;
+        width: 80%;
+        x: (parent.width - width)/2;
+        y: (parent.height - height)/2;
+        source <=> root.icon;
+        image-fit: contain;
+        colorize: (touch.has-hover || touch.pressed) ? white : icon-color;
+    }
+}
+
+export SquareButton := Rectangle {
+    callback clicked;
+    property <image> img;
+    border-radius: 3px;
+    border-width: 2px;
+    border-color: Palette.control-outline-color;
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+    Image {
+        height: 40%;
+        width: 40%;
+        x: (parent.width - width)/2;
+        y: (parent.height - height)/2;
+        source <=> root.img;
+        image-fit: contain;
+        colorize: Palette.control-secondary;
+    }
+}
+
+export SpinBox := Rectangle {
+    property <int> value;
+    property <int> minimum;
+    property <int> maximum: 100;
+    height: 32px;
+
+    HorizontalLayout {
+        spacing: 12px;
+        padding: 0;
+        SquareButton {
+            width: root.height - parent.padding * 2;
+            img: @image-url("images/minus.svg");
+            clicked => {
+                if (root.value > root.minimum) {
+                    root.value -= 1;
+                }
+            }
+        }
+
+        Rectangle {
+            border-radius: 3px;
+            border-width: 2px;
+            border-color: Palette.control-outline-color;
+            Text {
+                width: 100%;
+                height: 100%;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+                text: value;
+                color: Palette.control-foreground;
+            }
+        }
+
+        SquareButton {
+            width: root.height - parent.padding * 2;
+            img: @image-url("images/plus.svg");
+            clicked => {
+                if (root.value < root.maximum) {
+                    root.value += 1;
+                }
+            }
+        }
+    }
+}
+
+export ComboBox := Rectangle {
+    property<string> value;
+    property<[string]> choices;
+    border-radius: 3px;
+    border-width: 2px;
+    border-color: Palette.control-outline-color;
+    height: 32px;
+    min-width: label.x + label.width + i.width;
+    label := Text {
+        vertical-alignment: center;
+        horizontal-alignment: left;
+        text <=> root.value;
+        color: Palette.control-foreground;
+        height: 100%;
+        x: 12px;
+    }
+    i := Image {
+        source: @image-url("images/down.svg");
+        colorize: Palette.control-secondary;
+        height: 40%;
+        width: height;
+        image-fit: contain;
+        x: parent.width - width - y;
+        y: (parent.height - height)/2;
+    }
+
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        clicked => { popup.show(); }
+    }
+
+    popup := PopupWindow {
+        y: root.height;
+        width: root.width;
+        Rectangle {
+            background: Palette.page-background-color;
+            border-radius: 3px;
+            border-width: 2px;
+            border-color: Palette.control-outline-color;
+        }
+        VerticalLayout {
+            spacing: 6px;
+            padding: 3px;
+            for value[idx] in root.choices: Rectangle {
+                border-radius: 3px;
+                background: item-area.has-hover ? Palette.primary-push-button-colors.hovered : #0000;
+                HorizontalLayout {
+                    Text {
+                        text: value;
+                        color: item-area.has-hover ? Palette.push-button-text-color : Palette.text-foreground-color;
+                        font-size: Palette.base-font-size;
+                    }
+                }
+                item-area := TouchArea {
+                    clicked => {
+                        root.value = value;
+                    }
+                }
+            }
+        }
+    }
+}

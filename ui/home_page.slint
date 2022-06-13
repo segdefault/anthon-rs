@@ -1,0 +1,28 @@
+import { Palette, Page } from "common.slint";
+
+export HomePage := Page {
+    property <length> header-row-height: 40px;
+
+    property <length> button-spacing: 35px;
+    property <length> button-width: 127px;
+    property <length> button-height: button-width + 37px;
+
+    property <image> webcam_image;
+
+    header: "Home";
+
+    Rectangle { 
+        width: parent.width;
+        height: parent.height;
+
+        border-radius: Palette.border-radius;
+        clip: true;
+
+        Image {
+            width: parent.width;
+            height: parent.height;
+            source: webcam-image;
+            image-fit: fill;
+        }
+    }
+}

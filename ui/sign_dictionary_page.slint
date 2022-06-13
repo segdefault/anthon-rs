@@ -1,0 +1,125 @@
+import { Palette, Page, FilledButton } from "common.slint";
+import { ListView } from "widgets/list_view.slint";
+import { FeatureBox } from "widgets/feature_box.slint";
+import { ToggleableLineEdit } from "widgets/toggleable_line_edit.slint";
+
+export struct Sign := {
+    name: string,
+    irrelevant-flags: [bool],
+    required-flags: [bool],
+}
+
+export SignDictionaryPage := Page {
+    property <[string]> flag-names;
+    property <[Sign]> signs;
+    property <int> editing-sign: -1;
+
+    callback add-sign();
+    callback delete-sign(string);
+    callback set-feature(string, int, bool, bool);
+    callback set-sign-name(string, string);
+
+    header: "Sign Dictionary";
+
+    VerticalLayout {
+        x: (parent.width - width) / 2;
+        y: Palette.header-y-margin;
+        width: parent.width * 95%;
+        height: parent.height - y - 32px;
+
+        Rectangle {
+            background: Palette.list-header-color;
+            width: parent.width;
+            height: 30px;
+
+            HorizontalLayout { 
+                alignment: space-around;
+
+                Text {
+                    width: Palette.sign-dict-name-column-width;
+                    text: "";
+                }
+
+                for flag-name in flag-names : Text {
+                    width: Palette.sign-dict-column-width;
+                    horizontal-alignment: center;
+                    text: flag-name;
+                    font-family: Palette.base-font-family;
+                }
+
+                Rectangle { 
+                    height: parent.height;
+                    width: 32px * 40% + 16px;
+
+                    FilledButton { 
+                        width: 16px;
+                        height: width;
+                        x: parent.width - width;
+
+                        y: (parent.height - height) / 2;
+
+                        icon: @image-url("images/plus.svg");
+                        fill-color: Palette.control-secondary;
+
+                        clicked => { 
+                            root.add-sign();
+                        }
+                    }
+                }
+            }
+        }
+        ListView {
+            width: parent.width;
+
+            for sign[idx] in signs : Rectangle {
+                height: 32px;
+                background: (ceil(idx/2) == floor(idx/2)) ? Palette.list-item-color : Palette.list-item-darker-color;
+
+                HorizontalLayout {
+                    alignment: space-around;
+
+                    ToggleableLineEdit {
+                        width: Palette.sign-dict-name-column-width;
+
+                        text: sign.name;
+                        font-size: Palette.base-font-size;
+
+                        accepted(new_name) => {
+                            root.set-sign-name(sign.name, new_name);
+                            sign.name = new_name;
+                        }
+                    }
+
+                    for irrelevant-flag[idx] in sign.irrelevant-flags : Rectangle {
+                        width: Palette.sign-dict-column-width;
+
+                        FeatureBox {
+                            x: (parent.width - width) / 2;
+                            width: 16px;
+                            required: sign.required-flags[idx];
+                            irrelevant: irrelevant-flag;
+
+                            toggled => { 
+                                sign.required-flags[idx] = required;
+                                sign.irrelevant-flags[idx] = irrelevant;
+                                root.set-feature(sign.name, idx, irrelevant, required);
+                            }
+                        }
+                    }
+
+                    FilledButton { 
+                        y: (parent.height - height) / 2;
+
+                        height: parent.height * 40%;
+                        width: height;
+
+                        icon: @image-url("images/cross.svg");
+                        fill-color: red;
+
+                        clicked => { root.delete-sign(sign.name) }
+                    }
+                }
+            }
+        }
+    }
+}

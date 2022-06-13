@@ -1,0 +1,77 @@
+import {Palette} from "../common.slint";
+
+export FeatureBox := Rectangle {
+    callback toggled;
+    property <string> text <=> text.text;
+    property <bool> required: false;
+    property <bool> irrelevant: true;
+    property<bool> enabled <=> touch.enabled;
+    min-height: 20px;
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                property <bool> display-check: (((!irrelevant && required) && !(touch.has-hover || touch.pressed)) || (irrelevant && (touch.has-hover || touch.pressed)));
+                property <bool> display-cross: ((!irrelevant && !required && !(touch.has-hover || touch.pressed)) || (!irrelevant && required && (touch.has-hover || touch.pressed)));
+
+                border-width: 1px;
+                border-radius: 2px;
+
+                border-color: irrelevant ? background : !enabled ? Palette.control-foreground : Palette.control-secondary;
+                background: !(display-check || display-cross) ? white : Palette.control-foreground-darker;
+                animate background { duration: 250ms; easing: ease; }
+
+                vertical-stretch: 0;
+                width: 20px;
+                height: 20px;
+
+                if display-check : Image {
+                    width: 66%;
+                    height: 66%;
+                    x: (parent.width - width) / 2;
+                    y: (parent.height - height) / 2;
+                    source: @image-url("../images/check.svg");
+                    colorize: (!irrelevant && required) ? white : Palette.control-secondary;
+                }
+                if display-cross : Image {
+                    width: 66%;
+                    height: 66%;
+                    x: (parent.width - width) / 2;
+                    y: (parent.height - height) / 2;
+                    source: @image-url("../images/cross.svg");
+                    colorize: (!irrelevant && required) ? Palette.control-secondary : white;
+                }
+            }
+        }
+
+        text := Text {
+            color: !enabled ? Palette.text-foreground-color : Palette.control-foreground-darker;
+            horizontal-alignment: left;
+            vertical-alignment: center;
+            vertical-stretch: 1;
+        }
+
+    }
+
+    touch := TouchArea {
+        clicked => {
+            if (root.enabled) {
+                if (irrelevant) {
+                    irrelevant = false;
+                    required = true;
+                } else if (required) {
+                    required = false;
+                } else {
+                    irrelevant = true;
+                }
+
+                root.toggled();
+            }
+        }
+    }
+}

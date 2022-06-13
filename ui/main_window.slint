@@ -1,0 +1,223 @@
+import { Palette, Page } from "common.slint";
+import { HomePage } from "home_page.slint";
+import { SignDictionaryPage, Sign } from "sign_dictionary_page.slint";
+import { StateGraphPage } from "state_graph_page.slint";
+import { SettingsPage } from "settings_page.slint";
+import { Node, Edge, Command } from "widgets/graph.slint";
+
+SideBarIcon := Rectangle {
+    property <bool> active;
+    callback activate;
+
+    GridLayout {
+        padding: 0px;
+        @children
+    }
+
+    TouchArea {
+        clicked => { root.activate(); }
+    }
+}
+
+export MainWindow := Window {
+    property <int> active-node-id;
+    property <int> active-page: 2;
+    property <image> webcam-image;
+
+    callback add-sign();
+    callback delete-sign(string);
+    callback set-feature(string, int, bool, bool);
+    callback set-sign-name(string,string);
+
+    callback add-node(length, length);
+    callback delete-node(Node);
+    callback rename-node(Node);
+    callback node-moved(Node);
+    callback node-command-updated(Node, Command);
+
+    callback add-edge(Node, Node);
+    callback delete-edge(Edge);
+    callback set-edge-trigger(Edge, string);
+
+    // For display only. Will be overridden programmatically.
+    property <[string]> triggers: ["A", "B", "C"];
+    property <[string]> sign-flag-names: ["Index", "Middle", "Ring", "Pinky"];
+    property <[Sign]> signs: [
+        {
+            name: "UP",
+            irrelevant_flags: [true, true, false, false],
+            required_flags: [false, true, false, true],
+        },
+        {
+            name: "DOWN",
+            irrelevant_flags: [false, true, false, false],
+            required_flags: [true, true, false, false],
+        },
+        {
+            name: "RIGHT",
+            irrelevant_flags: [true, true, false, false],
+            required_flags: [true, true, true, true],
+        },
+        {
+            name: "LEFT",
+            irrelevant_flags: [true, false, false, true],
+            required_flags: [false, true, false, false],
+        },
+    ];
+    property <[string]> node-types: ["Basic",];
+    property <[string]> command-types: ["Execute", "Mouse"];
+    property <[string]> mouse-buttons: ["Left", "Right"];
+    property <[string]> key-events: ["Up", "Down"];
+    property <[string]> axes;
+    property <[Node]> nodes;
+    property <[Edge]> edges;
+
+    title: "Anthon";
+    background: Palette.main-background;
+    preferred-width: 1024px;
+    preferred-height: 576px;
+
+    default-font-family: Palette.base-font-family;
+    default-font-size: Palette.base-font-size;
+
+    HorizontalLayout { 
+        padding: 10px;
+        padding-left: 67px;
+
+        main-view := Rectangle {
+            height: 100%;
+            border-radius: Palette.border-radius;
+            background: Palette.page-background-color;
+
+            Rectangle { 
+                clip: true;
+
+                x: main-view.border-radius / 2;
+                y: main-view.border-radius / 2;
+
+                width: main-view.width - main-view.border-radius;
+                height: main-view.height - main-view.border-radius;
+
+                HomePage {
+                    webcam-image: root.webcam-image;
+
+                    y: active-page == 0 ? 0 : active-page < 0 ? height + 1px : - parent.height - 1px;
+                    animate y { duration: 125ms; easing: ease; }
+                }
+                SignDictionaryPage {
+                    signs: root.signs;
+                    flag-names: root.sign-flag-names;
+
+                    y: active-page == 1 ? 0 : active-page < 1 ? height + 1px : - parent.height - 1px;
+                    animate y { duration: 125ms; easing: ease; }
+
+                    add-sign => { root.add-sign() }
+                    delete-sign(sign-name) => { root.delete-sign(sign-name) }
+                    set-feature(sign-name, feature-index, irrelevant, required) => { 
+                        root.set-feature(sign-name, feature-index, irrelevant, required);
+                    }
+                    set-sign-name(old_name, new_name) => { root.set-sign-name(old_name, new_name) }
+                }
+                StateGraphPage {
+                    node-types: root.node-types;
+                    command-types: root.command-types;
+                    mouse-buttons: root.mouse-buttons;
+                    key-events: root.key-events;
+                    nodes: root.nodes;
+                    edges: root.edges;
+                    triggers: root.triggers;
+                    axes: root.axes;
+                    active-node-id: root.active-node-id;
+
+                    y: active-page == 2 ? 0 : active-page < 2 ? height + 1px : - parent.height - 1px;
+                    animate y { duration: 125ms; easing: ease; }
+
+                    add-node(x, y) => { root.add-node(x, y) }
+                    delete-node(node) => { root.delete-node(node) }
+                    rename-node(node) => { root.rename-node(node) }
+                    node-moved(node) => { root.node-moved(node) }
+                    node-command-updated(node, cmd) => { root.node-command-updated(node, cmd) }
+
+                    add-edge(from, to) => { root.add-edge(from, to) }
+                    delete-edge(edge) => { root.delete-edge(edge) }
+                    set-edge-trigger(edge, trigger) => { root.set-edge-trigger(edge, trigger) }
+                }
+                SettingsPage {
+                    y: active-page == 3 ? 0 : active-page < 3 ? height + 1px : - parent.height - 1px;
+                    animate y { duration: 125ms; easing: ease; }
+                }
+            }
+        }
+    }
+
+    sidebar := Rectangle {
+        width: 57px;
+        x: 0px;
+
+        callback icon-y(int) -> length;
+        icon-y(index) => { 
+            return 100px + index * 72px;
+        }
+
+        Image {
+            source: @image-url("images/page_selection.svg");
+            y: sidebar.icon-y(root.active-page) - self.width / 2 - 8px;
+            animate y { duration: 125ms; }
+            width: main-view.x - sidebar.x + 1px;
+            height: 1.77 * self.width;
+            colorize: Palette.page-background-color;
+        }
+
+        for page-icon[idx] in [
+            @image-url("images/home.svg"),
+            @image-url("images/sign.svg"),
+            @image-url("images/graph.svg"),
+            @image-url("images/settings.svg"),
+        ] : SideBarIcon {
+            x: 16px;
+            y: sidebar.icon-y(idx);
+            height: 35px;
+            width: 30px;
+
+            icon := Image {
+                colorize: (root.active-page == idx) ? Palette.active-page-icon-color : Palette.inactive-page-icon-color;
+                animate colorize { duration: 125ms; }
+                source: page-icon;
+                image-fit: contain;
+                width: 100%;
+                height: 100%;
+            }
+
+            activate => { root.active-page = idx; }
+        }
+    }
+
+    Rectangle { 
+        x: 12px;
+        y: sidebar.icon-y(4) + 17px;
+        
+        width: 37px;
+        height: 2px;
+
+        background: Palette.separator-color;
+    }
+
+    SideBarIcon { 
+        x: 16px;
+        y: sidebar.icon-y(5);
+        width: 30px;
+        height: 35px;
+
+        Image { 
+            colorize: Palette.night-mode ? Palette.active-page-icon-color : Palette.inactive-page-icon-color;
+            source: @image-url("images/theme_light_dark.svg");
+            image-fit: contain;
+            width: 100%;
+            height: 100%;
+        }
+
+        activate => { 
+            Palette.night-mode = !Palette.night-mode;
+        }
+    }
+}

@@ -1,0 +1,329 @@
+import { CheckBox, LineEdit, ComboBox } from "std-widgets.slint";
+import {Palette} from "../common.slint";
+import {ToggleableLineEdit} from "toggleable_line_edit.slint";
+
+export struct Command := {
+    title: string,
+    // TODO: Replace with enum if possible
+    type: string,
+
+    exec-command: string,
+    mouse-button: string,
+    key-event: string,
+    scroll-axis: string,
+    scroll-custom-command-enabled: bool,
+    scroll-custom-command: string,
+    scroll-factor: float,
+}
+
+export struct Node := {
+    id: int,
+
+    title: string,
+    // TODO: Replace with enum if possible
+    type: string,
+
+    commands: [Command],
+
+    x: length,
+    y: length,
+}
+
+export struct Edge := {
+    title: string,
+    from: Node,
+    to: Node,
+}
+
+export CommandBox := VerticalLayout {
+    property <Command> command;
+    property <[string]> command-types;
+    property <[string]> mouse-buttons;
+    property <[string]> key-events;
+    property <[string]> axes;
+
+    spacing: 8px;
+
+    callback updated(Command);
+
+    HorizontalLayout {
+        alignment: space-between;
+        Text {
+            width: 72px;
+            vertical-alignment: center;
+            color: white;
+            text: command.title;
+        }
+
+        ComboBox {
+            model: command-types;
+            current-value: command.type;
+
+            selected(type) => {
+                command.type = type;
+                root.updated(command);
+            }
+        }
+    }
+
+    if command.type == "Execute" : LineEdit {
+        text: command.exec-command;
+        placeholder-text: "Command to execute";
+
+        accepted(cmd) => {
+            command.exec-command = cmd;
+            root.updated(command);
+        }
+    }
+
+    if command.type == "Mouse" : ComboBox {
+        model: root.mouse-buttons;
+        current-value: command.mouse-button;
+
+        selected(type) => {
+            command.mouse-button = type;
+            root.updated(command)
+        }
+    }
+
+    if command.type == "Mouse" : ComboBox {
+        model: root.key-events;
+        current-value: command.key-event;
+
+        selected(type) => {
+            command.key-event = type;
+            root.updated(command)
+        }
+    }
+
+    if command.type == "Scroll" : HorizontalLayout {
+        spacing: 16px;
+        alignment: LayoutAlignment.stretch;
+
+        LineEdit {
+            horizontal-stretch: 1;
+            text: command.scroll-custom-command;
+            enabled: command.scroll-custom-command-enabled;
+            placeholder-text: "Custom command";
+
+            edited(new-cmd) => {
+                command.scroll-custom-command = new-cmd;
+                root.updated(command);
+            }
+        }
+
+        CheckBox {
+            horizontal-stretch: 0;
+            checked: command.scroll-custom-command-enabled;
+
+            toggled => {
+                command.scroll-custom-command-enabled = checked;
+                root.updated(command);
+            }
+        }
+    }
+
+    if command.type == "Scroll" : HorizontalLayout {
+        alignment: space-between;
+
+        Text {
+            text: "Axis";
+            color: white;
+        }
+
+        ComboBox {
+            model: axes;
+            current-value: command.scroll-axis;
+
+            selected(axis) => {
+                command.scroll-axis = axis;
+                root.updated(command);
+            }
+        }
+    }
+}
+
+export DrawableNode := Rectangle {
+    property <Node> node;
+    property <bool> active;
+    property <length> x-offset;
+    property <length> y-offset;
+
+    callback clicked(Node);
+    callback moved(Node);
+
+    x: node.x + x-offset;
+    y: node.y + y-offset;
+
+    width: Palette.node-size;
+    height: width;
+
+    border-width: 3px;
+    border-radius: node.type == "Basic" ? height / 2 : (node.type == "Pointing" ? height / 3 : 0px);
+    border-color: active ? Palette.control-outline-color-active : Palette.control-outline-color;
+    background: Palette.graph-node-background;
+
+    Text { 
+        text: node.title;
+        color: Palette.graph-node-foreground;
+
+        width: parent.width;
+        height: parent.height;
+
+        font-weight: 1000;
+        vertical-alignment: TextVerticalAlignment.center;
+        horizontal-alignment: TextHorizontalAlignment.center;
+    }
+
+    TouchArea { 
+        property <length> on-press-x;
+        property <length> on-press-y;
+
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                on-press-x = node.x;
+                on-press-y = node.y;
+            } else {
+                root.moved(node)
+            }
+        }
+        clicked => { root.clicked(node) }
+        moved => {
+            node.x = on-press-x + mouse-x - pressed-x;
+            node.y = on-press-y + mouse-y - pressed-y;
+        }
+    }
+}
+
+export DrawableEdge := Rectangle {
+    property <Edge> edge;
+    property <bool> flip-h: edge.from.x > edge.to.x;
+    property <bool> flip-v: edge.from.y > edge.to.y;
+
+    callback clicked();
+
+    horizontal := Rectangle {
+        property <bool> flip-h: edge.from.x > edge.to.x;
+        
+        // Anchor at first node
+        x: (flip_h ? -width - Palette.node-size : 0px) + Palette.node-size;
+        y: Palette.node-size/2;
+
+        height: 2px;
+        width: (flip-h ? edge.from.x - edge.to.x : edge.to.x - edge.from.x) - Palette.node-size/2;
+
+        background: black;
+
+        TouchArea {
+            clicked => { root.clicked() }
+        }
+    }
+
+    vertical := Rectangle { 
+        // Anchor at end of the horizontal bar
+        x: horizontal.flip-h ? horizontal.x : horizontal.x + horizontal.width;
+        y: flip-v ? horizontal.y - height + horizontal.height : horizontal.y;
+
+        width: horizontal.height;
+        height: (flip-v ? edge.from.y - edge.to.y : edge.to.y - edge.from.y) - Palette.node-size/2 - arrow-head.height;
+
+        background: black;
+
+        TouchArea { 
+            clicked => { root.clicked() }
+        }
+    }
+
+    // Deleted: Messy TouchArea position + No scale option
+    //
+    // line := Path {
+    //     x: (flip_h ? -width - Palette.node-size : 0px) + Palette.node-size;
+    //     y: flip-v ? Palette.node-size/2 - height : Palette.node-size/2;
+
+    //     width: (flip-h ? edge.from.x - edge.to.x : edge.to.x - edge.from.x) - Palette.node-size/2;
+    //     height: (flip-v ? edge.from.y - edge.to.y : edge.to.y - edge.from.y) - Palette.node-size/2;
+
+    //     stroke: black;
+    //     stroke-width: 2px;
+
+    //     commands: flip-h ? (flip-v ? "M 100 100 L 0 100 L 0 0" : "M 100 0 L 0 0 L 0 100") : (flip-v ? "M 0 100 L 100 100 L 100 0" : "M 0 0 L 100 0 L 100 100");
+    // }
+
+    arrow-head := Path {
+        x: vertical.x - (width - vertical.width)/2;
+        y: (flip-v ? -arrow-head.height : vertical.height - height + arrow-head.height) + vertical.y;
+
+        width: 10px;
+        height: width;
+        commands: flip-v ?
+            "M 0 100 L 100 100 L 50 0 Z"
+            : "M 0 0 L 100 0 L 50 100 Z";
+        stroke: black;
+        fill: stroke;
+        stroke-width: 1px;
+    }
+
+    Text { 
+        text: edge.title;
+        x: horizontal.x + (flip-h ? 0px: horizontal.width);
+        y: horizontal.y + (flip-v ? 0px : -height);
+
+        TouchArea { 
+            clicked => { root.clicked() }
+        }
+    }
+}
+
+export Graph := Rectangle {
+    property <int> active-node-id;
+    property <[Node]> nodes;
+    property <[Edge]> edges;
+    property <length> x-offset;
+    property <length> y-offset;
+
+    callback node-clicked(Node);
+    callback node-moved(Node);
+    callback edge-clicked(Edge);
+    callback clicked(length, length);
+
+    touch-area := TouchArea { 
+        property <length> on-press-x-offset;
+        property <length> on-press-y-offset;
+
+        pointer-event(event) => { 
+            if (event.kind == PointerEventKind.down) {
+                on-press-x-offset = x-offset;
+                on-press-y-offset = y-offset;
+            }
+        }
+
+        clicked => {
+            root.clicked(mouse-x - x-offset, mouse-y - y-offset);
+        }
+
+        moved => { 
+            x-offset = on-press-x-offset + mouse-x - pressed-x;
+            y-offset = on-press-y-offset + mouse-y - pressed-y;
+        }
+    }
+
+    for node[idx] in nodes : DrawableNode {
+        node: node;
+        active: node.id == active-node-id;
+        x-offset: root.x-offset;
+        y-offset: root.y-offset;
+
+        moved(node) => {
+            root.node-moved(node);
+        }
+        clicked(node) => { root.node-clicked(node) }
+    }
+
+    for edge in edges: DrawableEdge {
+        x: edge.from.x + x-offset;
+        y: edge.from.y + y-offset;
+
+        edge: edge;
+        clicked => { root.edge-clicked(edge) }
+    }
+}

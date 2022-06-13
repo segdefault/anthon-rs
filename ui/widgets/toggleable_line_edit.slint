@@ -1,0 +1,41 @@
+import { LineEdit } from "std-widgets.slint";
+
+export ToggleableLineEdit := Rectangle {
+    property <bool> toggled: false;
+    property <string> text;
+    property <length> font-size: 16px;
+
+    callback accepted(string);
+    callback edited(string);
+
+
+    if toggled : line-edit := LineEdit { 
+        width: parent.width;
+        height: parent.height;
+
+        text <=> parent.text;
+        font-size: parent.font-size;
+
+        edited(new-text) => { root.edited(new-text) }
+
+        accepted(new-text) => {
+            toggled = false;
+
+            root.accepted(new-text);
+        }
+    }
+    if !toggled : text := Text {
+        width: parent.width;
+        height: parent.height;
+
+        vertical-alignment: center;
+        text <=> parent.text;
+        font-size: parent.font-size;
+
+        TouchArea { 
+            clicked => { 
+                toggled = true;
+            }
+        }
+    }
+}
