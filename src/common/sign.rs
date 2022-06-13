@@ -127,19 +127,25 @@ impl From<&[Point2F]> for Sign {
         let mut features = HashMap::new();
         let palm_circle = Circle::from(vec![landmarks[0], landmarks[5], landmarks[17]].as_ref());
 
-        let hand_angle = Vec2F::from((landmarks[0], landmarks[17])).angle(&Vec2F {
-            x: landmarks[0].x,
-            y: 1f32,
-        });
+        let hand_angle = Vec2F::from((landmarks[0], landmarks[17]))
+            .angle(&Vec2F {
+                x: landmarks[0].x,
+                y: 1f32,
+            })
+            .to_degrees();
 
         let thumb_index_angle = Vec2F::from((landmarks[0], landmarks[4]))
-            .angle(&Vec2F::from((landmarks[0], landmarks[5])));
+            .angle(&Vec2F::from((landmarks[0], landmarks[5])))
+            .to_degrees();
         let index_middle_angle = Vec2F::from((landmarks[5], landmarks[8]))
-            .angle(&Vec2F::from((landmarks[5], landmarks[12])));
+            .angle(&Vec2F::from((landmarks[5], landmarks[12])))
+            .to_degrees();
         let middle_ring_angle = Vec2F::from((landmarks[9], landmarks[12]))
-            .angle(&Vec2F::from((landmarks[9], landmarks[16])));
+            .angle(&Vec2F::from((landmarks[9], landmarks[16])))
+            .to_degrees();
         let ring_pinky_angle = Vec2F::from((landmarks[13], landmarks[16]))
-            .angle(&Vec2F::from((landmarks[13], landmarks[20])));
+            .angle(&Vec2F::from((landmarks[13], landmarks[20])))
+            .to_degrees();
 
         features.insert(
             Feature::IndexClosed,
