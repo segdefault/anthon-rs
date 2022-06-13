@@ -7,12 +7,12 @@ pub struct ProbabilityVector {
 
 impl ProbabilityVector {
     pub fn new(capacity: usize, sensitivity: f32) -> Self {
-        let mut vec = Vec::with_capacity(capacity);
+        let mut probabilities = Vec::with_capacity(capacity);
         let init_val = (1f64 / capacity as f64) as f32;
 
-        (0..capacity).for_each(|_| vec.push(init_val));
+        (0..capacity).for_each(|_| probabilities.push(init_val));
         ProbabilityVector {
-            probabilities: vec,
+            probabilities,
             sensitivity,
         }
     }
