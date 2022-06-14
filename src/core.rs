@@ -87,7 +87,7 @@ impl Core {
             .state_graph()
             .get_node(self.state_machine.current_state())
             .unwrap();
-        self.pointer_tracker.freeze = !current_state.r#type.eq(&StateType::Pointing);
+        self.pointer_tracker.freeze = !current_state.r#type().eq(&StateType::Pointing);
     }
 
     fn check_sign_count_update(&mut self) {

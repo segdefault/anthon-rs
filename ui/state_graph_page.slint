@@ -357,6 +357,8 @@ export StateGraphPage := Page {
         type-selected(type) => {
             node.type = type;
             root.node-type-updated(node);
+            // FIXME: Lazy fix to refresh the command panel
+            hidden = true;
         }
     }
 }

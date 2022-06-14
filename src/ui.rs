@@ -554,16 +554,18 @@ impl MainWindow {
         config: Arc<Mutex<Config>>,
         nodes: Rc<VecModel<SlintNode>>,
     ) {
-        config
-            .lock()
-            .unwrap()
+        let mut config = config.lock().unwrap();
+
+        let state = config
             .state_graph_mut()
             .get_node_mut(&updated_node.id)
-            .expect("Consistency Error: Invalid node ID")
-            .r#type =
-            StateType::from_str(updated_node.r#type.as_str()).expect("Error: Invalid state type");
+            .expect("Consistency Error: Invalid node ID");
 
-        self.force_node_update(updated_node, nodes);
+        state.set_type(
+            StateType::from_str(updated_node.r#type.as_str()).expect("Error: Invalid state type"),
+        );
+
+        self.force_node_update(SlintNode::from(state as &State<StateIndex>), nodes);
     }
 
     fn move_edges_of(&self, node: &SlintNode, edges: Rc<VecModel<SlintEdge>>) {
@@ -704,7 +706,7 @@ impl From<&State<StateIndex>> for SlintNode {
             x: state.x,
             y: state.y,
 
-            r#type: state.r#type.to_string().into(),
+            r#type: state.r#type().to_string().into(),
             commands: Rc::new(VecModel::from(commands)).into(),
         }
     }

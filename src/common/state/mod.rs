@@ -13,7 +13,7 @@ use crate::common::{Axis, Command, ScrollCommand};
 mod conditional_edge;
 mod state_machine;
 
-#[derive(Serialize, Deserialize, PartialEq, Display, EnumIter, EnumString)]
+#[derive(Copy, Clone, Serialize, Deserialize, PartialEq, Display, EnumIter, EnumString)]
 pub enum StateType {
     Basic,
     Pointing,
@@ -36,7 +36,7 @@ pub struct State<I: Eq + Hash> {
     // Less boilerplate code if events
     // are done this way rather than using
     // a more fabulous enum for the state type
-    pub r#type: StateType,
+    r#type: StateType,
     events: HashMap<StateEvent, Command>,
 
     // If you think that these should be stored somewhere else, meh, you are right.
@@ -74,6 +74,10 @@ impl<I: Eq + Hash> State<I> {
         if self.events.contains_key(&event) {
             self.events.insert(event, command);
         }
+    }
+
+    pub fn r#type(&self) -> StateType {
+        self.r#type
     }
 
     // Modify the available events according to the selected states
