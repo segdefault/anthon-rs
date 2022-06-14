@@ -40,7 +40,7 @@ impl ProbabilityVector {
         self.probabilities = self
             .probabilities
             .iter()
-            .map(|val| val + (val - expected_val) * inverse)
+            .map(|val| val - (val - expected_val) * inverse)
             .collect();
 
         self.adjust_floating_point_errors();
