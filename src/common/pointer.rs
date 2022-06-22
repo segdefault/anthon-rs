@@ -20,7 +20,7 @@ pub struct PointerTracker {
     delta_x: f32,
     delta_y: f32,
 
-    virtual_screen: Rectangle,
+    dynamic_virtual_box: Rectangle,
     context: Context,
 }
 
@@ -54,7 +54,7 @@ impl PointerTracker {
             delta_x: 0f32,
             delta_y: 0f32,
 
-            virtual_screen,
+            dynamic_virtual_box: virtual_screen,
 
             context: Context::new()?,
         };
@@ -87,8 +87,10 @@ impl PointerTracker {
             let prev_y = *self.y;
             let new_x = (landmarks[5].x + landmarks[17].x).abs() / 2f32;
             let new_y = (landmarks[5].y + landmarks[17].y).abs() / 2f32;
-            let prev_virtual_x = (prev_x - self.virtual_screen.x) / self.virtual_screen.width;
-            let prev_virtual_y = (prev_y - self.virtual_screen.y) / self.virtual_screen.height;
+            let prev_virtual_x =
+                (prev_x - self.dynamic_virtual_box.x) / self.dynamic_virtual_box.width;
+            let prev_virtual_y =
+                (prev_y - self.dynamic_virtual_box.y) / self.dynamic_virtual_box.height;
 
             let delta_x = smooth(new_x - prev_x, 0.5f32);
             let delta_y = smooth(new_y - prev_y, 0.5f32);
@@ -96,8 +98,9 @@ impl PointerTracker {
             self.y.set_value(prev_y + delta_y);
 
             self.update_virtual_screen(landmarks)?;
-            let virtual_x = (*self.x - self.virtual_screen.x) / self.virtual_screen.width;
-            let virtual_y = (*self.y - self.virtual_screen.y) / self.virtual_screen.height;
+            let virtual_x = (*self.x - self.dynamic_virtual_box.x) / self.dynamic_virtual_box.width;
+            let virtual_y =
+                (*self.y - self.dynamic_virtual_box.y) / self.dynamic_virtual_box.height;
 
             self.delta_x = virtual_x - prev_virtual_x;
             self.delta_y = virtual_y - prev_virtual_y;
@@ -105,10 +108,12 @@ impl PointerTracker {
             if !self.freeze {
                 let screen = self.context.screen_size()?;
 
-                let x_ratio =
-                    min_max_normal((*self.x - self.virtual_screen.x) / self.virtual_screen.width);
-                let y_ratio =
-                    min_max_normal((*self.y - self.virtual_screen.y) / self.virtual_screen.height);
+                let x_ratio = min_max_normal(
+                    (*self.x - self.dynamic_virtual_box.x) / self.dynamic_virtual_box.width,
+                );
+                let y_ratio = min_max_normal(
+                    (*self.y - self.dynamic_virtual_box.y) / self.dynamic_virtual_box.height,
+                );
 
                 let real_x = x_ratio * screen.0 as f32;
                 let real_y = y_ratio * screen.1 as f32;
@@ -123,10 +128,10 @@ impl PointerTracker {
     fn update_virtual_screen(&mut self, landmarks: &[Point2F]) -> Result<(), Error> {
         let v_size = ((landmarks[5].x - landmarks[17].x).abs() * PRECISION_FACTOR).min(1f32);
 
-        self.virtual_screen
-            .scale(*self.x, *self.y, v_size / self.virtual_screen.width);
-        self.virtual_screen.contain(*self.x, *self.y);
-        self.virtual_screen.bound(0f32, 0f32, 1f32, 1f32);
+        self.dynamic_virtual_box
+            .scale(*self.x, *self.y, v_size / self.dynamic_virtual_box.width);
+        self.dynamic_virtual_box.contain(*self.x, *self.y);
+        self.dynamic_virtual_box.bound(0f32, 0f32, 1f32, 1f32);
 
         Ok(())
     }
