@@ -30,12 +30,44 @@ pub struct ScrollCommand {
     pub axis: Axis,
 }
 
+struct ProcessCommandSplitter {
+    command: String,
+}
+
+impl From<String> for ProcessCommandSplitter {
+    fn from(command: String) -> Self {
+        Self { command }
+    }
+}
+
+impl From<ProcessCommandSplitter> for String {
+    fn from(command: ProcessCommandSplitter) -> Self {
+        command.command
+    }
+}
+
+impl From<ProcessCommandSplitter> for ProcessCommand {
+    fn from(command: ProcessCommandSplitter) -> Self {
+        let command = String::from(command);
+        let mut args = command.trim().split(' ');
+        let mut command = ProcessCommand::new(args.next().unwrap());
+
+        for arg in args {
+            command.arg(arg);
+        }
+
+        command
+    }
+}
+
 impl Command {
     pub fn execute(&self, pointer: &mut PointerTracker) {
         match self {
             Command::Disabled => (),
             Command::Execute(cmd) => {
-                ProcessCommand::new(cmd).spawn().ok();
+                ProcessCommand::from(ProcessCommandSplitter::from(cmd.clone()))
+                    .spawn()
+                    .ok();
             }
             Command::Mouse(button, event) => {
                 match event {
@@ -45,15 +77,24 @@ impl Command {
                 };
             }
             Command::Scroll(cmd) => {
-                let offset: i32 = (pointer.delta_y() * cmd.factor).round() as i32;
-                if let Some(ref cmd) = cmd.custom_command {
-                    ProcessCommand::new(cmd.to_owned() + offset.to_string().as_str())
+                let offset_x: i32 = (pointer.delta_x() * cmd.factor).round() as i32;
+                let offset_y: i32 = (pointer.delta_y() * cmd.factor).round() as i32;
+
+                if let Some(ref custom_cmd) = cmd.custom_command {
+                    ProcessCommand::from(ProcessCommandSplitter::from(custom_cmd.clone()))
+                        .arg(
+                            match cmd.axis {
+                                Axis::X => offset_x,
+                                Axis::Y => offset_y,
+                            }
+                            .to_string(),
+                        )
                         .spawn()
                         .ok();
                 } else {
                     match cmd.axis {
-                        Axis::X => pointer.context_mut().mouse_scroll(offset, 0).ok(),
-                        Axis::Y => pointer.context_mut().mouse_scroll(0, offset).ok(),
+                        Axis::X => pointer.context_mut().mouse_scroll(offset_x, 0).ok(),
+                        Axis::Y => pointer.context_mut().mouse_scroll(0, offset_y).ok(),
                     };
                 }
             }
