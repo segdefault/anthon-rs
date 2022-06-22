@@ -1,6 +1,6 @@
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
-use std::time::Duration;
+use std::time::SystemTime;
 
 use nokhwa::{CameraFormat, FrameFormat, ThreadedCamera};
 use slint::ComponentHandle;
@@ -8,6 +8,7 @@ use slint::ComponentHandle;
 use config::Config;
 use ui::MainWindow;
 
+use crate::common::filter::Wmaf32;
 use crate::common::{state::ConditionalEdge, Graph, State};
 use crate::core::Core;
 
@@ -50,10 +51,21 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config_clone = Arc::clone(&config);
     let processing_thread = thread::spawn(move || {
         let mut core = Core::new(window_weak, camera, config_clone);
+        let mut spf = Wmaf32::new(5);
 
         while rx.try_recv().is_err() {
+            let last_time = SystemTime::now();
             core.tick();
-            thread::sleep(Duration::from_millis(MPF));
+            // thread::sleep(Duration::from_millis(MPF));
+
+            spf.set_value(
+                SystemTime::now()
+                    .duration_since(last_time)
+                    .unwrap()
+                    .as_secs_f32(),
+            );
+            println!("{}", 1f32 / *spf);
+            thread::yield_now()
         }
     });
 
