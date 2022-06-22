@@ -49,6 +49,22 @@ impl<I: Eq + Hash + Copy> StateMachine<I> {
         false
     }
 
+    pub fn trigger_misc_events<J: Eq + Hash + Display>(
+        &self,
+        state_graph: &Graph<I, State<I>, ConditionalEdge<I, Option<J>>>,
+        pointer: &mut PointerTracker,
+    ) {
+        if let Some(current_state) = state_graph.get_node(&self.current_state) {
+            for (_, cmd) in current_state
+                .events
+                .iter()
+                .filter(|(e, _)| (*e).ne(&StateEvent::OnExit) && (*e).ne(&StateEvent::OnEnter))
+            {
+                cmd.execute(pointer);
+            }
+        }
+    }
+
     fn try_execute<J: Eq + Hash + Display>(
         &mut self,
         event: &StateEvent,

@@ -149,6 +149,8 @@ impl Core {
                         );
                     }
                 }
+                self.state_machine
+                    .trigger_misc_events(config.state_graph(), &mut self.pointer_tracker);
             }
         } else {
             self.probability_vector.rebalance();
