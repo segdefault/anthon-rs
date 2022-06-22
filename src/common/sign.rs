@@ -162,7 +162,7 @@ impl From<&[Point2F]> for Sign {
         );
         features.insert(
             Feature::HandRotated,
-            FeatureState::Exists(hand_angle < 120f32),
+            FeatureState::Exists(hand_angle < 140f32),
         );
         features.insert(
             Feature::ThumbIndexSpread,
