@@ -161,13 +161,19 @@ impl Core {
             let frame = self.camera.last_frame();
 
             move || {
-                let buffer = SharedPixelBuffer::clone_from_slice(
-                    frame.as_raw(),
-                    frame.width(),
-                    frame.height(),
-                );
-                let image = Image::from_rgb8(buffer);
-                window_clone.unwrap().set_webcam_image(image);
+                let window = window_clone.unwrap();
+
+                let camera_visible = window.get_active_page() == 0;
+                if camera_visible {
+                    let buffer = SharedPixelBuffer::clone_from_slice(
+                        frame.as_raw(),
+                        frame.width(),
+                        frame.height(),
+                    );
+                    let image = Image::from_rgb8(buffer);
+
+                    window.set_webcam_image(image);
+                }
             }
         });
     }
