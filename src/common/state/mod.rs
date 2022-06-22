@@ -106,7 +106,7 @@ impl<I: Eq + Hash> State<I> {
                     StateEvent::OnScrollX,
                     Command::Scroll(ScrollCommand {
                         custom_command: None,
-                        factor: 100f32,
+                        factor: 1000f32,
                         axis: Axis::X,
                     }),
                 );
@@ -114,7 +114,7 @@ impl<I: Eq + Hash> State<I> {
                     StateEvent::OnScrollY,
                     Command::Scroll(ScrollCommand {
                         custom_command: None,
-                        factor: 100f32,
+                        factor: 1000f32,
                         axis: Axis::Y,
                     }),
                 );
