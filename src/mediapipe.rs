@@ -32,10 +32,10 @@ pub struct Mediapipe {
 }
 
 impl Mediapipe {
-    pub fn process(&self, frame: ImageBuffer<Rgb<u8>, Vec<u8>>) -> Packet {
+    pub fn process(&self, frame: &ImageBuffer<Rgb<u8>, Vec<u8>>) -> Packet {
         let width = frame.width();
         let height = frame.height();
-        let data = frame.into_raw();
+        let data = frame.as_raw();
         let data = data.as_slice();
 
         unsafe {

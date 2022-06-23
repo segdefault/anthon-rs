@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use imageproc::rect::Rect;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Rectangle {
     pub x: f32,
@@ -56,6 +58,20 @@ impl Rectangle {
 
         self.width *= factor;
         self.height *= factor;
+    }
+
+    pub fn multiply(&mut self, x_factor: f32, y_factor: f32) {
+        self.x *= x_factor;
+        self.y *= y_factor;
+
+        self.width *= x_factor;
+        self.height *= y_factor;
+    }
+}
+
+impl From<Rectangle> for Rect {
+    fn from(rect: Rectangle) -> Self {
+        Rect::at(rect.x as i32, rect.y as i32).of_size(rect.width as u32, rect.height as u32)
     }
 }
 

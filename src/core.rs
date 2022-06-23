@@ -6,7 +6,6 @@ use nokhwa::ThreadedCamera;
 #[allow(unused_imports)]
 use slint::ComponentHandle;
 use slint::Weak;
-use slint::{Image, SharedPixelBuffer};
 
 use crate::common::state::{StateMachine, StateType};
 use crate::common::{pointer, PointerTracker, ProbabilityVector, Sign};
@@ -111,14 +110,14 @@ impl Core {
         self.check_sign_count_update();
 
         let config = self.config.lock().unwrap();
-        let frame = imageops::flip_horizontal(&self.camera.last_frame());
-        let packet = self.mediapipe.process(frame);
+        let mut frame = imageops::flip_horizontal(&self.camera.last_frame());
+        let packet = self.mediapipe.process(&frame);
 
         self.pointer_tracker
             .track(&packet)
             .expect("ERROR: Tracking error.");
 
-        if let Some(landmarks) = packet.landmarks {
+        if let Some(ref landmarks) = packet.landmarks {
             let sign: Sign = landmarks.as_slice().into();
             let similar = config.sign_dictionary().find_similar(&sign);
 
@@ -158,20 +157,22 @@ impl Core {
 
         slint::invoke_from_event_loop({
             let window_clone = self.window.clone();
-            let frame = self.camera.last_frame();
+            let dvb = self.pointer_tracker.dvb().clone();
+            let center = if let Some(ref landmarks) = packet.landmarks {
+                (
+                    (landmarks[5].x + landmarks[17].x) / 2f32,
+                    (landmarks[5].y + landmarks[17].y) / 2f32,
+                )
+            } else {
+                (0f32, 0f32)
+            };
 
             move || {
                 let window = window_clone.unwrap();
 
                 let camera_visible = window.get_active_page() == 0;
                 if camera_visible {
-                    let buffer = SharedPixelBuffer::clone_from_slice(
-                        frame.as_raw(),
-                        frame.width(),
-                        frame.height(),
-                    );
-                    let image = Image::from_rgb8(buffer);
-
+                    let image = PointerTracker::annotate(&mut frame, dvb, center);
                     window.set_webcam_image(image);
                 }
             }

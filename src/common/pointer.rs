@@ -1,5 +1,8 @@
 use std::{thread, time::Duration};
 
+use image::{Rgb, RgbImage};
+use imageproc::drawing;
+use slint::{Image, Rgb8Pixel, SharedPixelBuffer};
 use tfc::{Context, Error, MouseContext, ScreenContext};
 
 use crate::common::filter::Wmaf32;
@@ -81,6 +84,10 @@ impl PointerTracker {
         &mut self.context
     }
 
+    pub fn dvb(&self) -> &Rectangle {
+        &self.dynamic_virtual_box
+    }
+
     pub fn track(&mut self, packet: &Packet) -> Result<(), Error> {
         if let Some(ref landmarks) = packet.landmarks {
             let prev_x = *self.x;
@@ -134,6 +141,26 @@ impl PointerTracker {
         self.dynamic_virtual_box.bound(0f32, 0f32, 1f32, 1f32);
 
         Ok(())
+    }
+
+    pub fn annotate(frame: &mut RgbImage, mut dvb: Rectangle, center: (f32, f32)) -> Image {
+        dvb.multiply(frame.width() as f32, frame.height() as f32);
+        let center = (
+            (center.0 * frame.width() as f32) as i32,
+            (center.1 * frame.height() as f32) as i32,
+        );
+        let center_radius = (frame.width() as f32 * 0.01f32) as i32;
+
+        let green = Rgb::from([0, 255, 0]);
+        drawing::draw_hollow_rect_mut(frame, dvb.into(), green);
+        drawing::draw_filled_circle_mut(frame, center, center_radius, green);
+
+        let buffer = SharedPixelBuffer::<Rgb8Pixel>::clone_from_slice(
+            frame.as_raw(),
+            frame.width(),
+            frame.height(),
+        );
+        Image::from_rgb8(buffer)
     }
 }
 

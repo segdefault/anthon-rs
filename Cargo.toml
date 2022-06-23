@@ -19,6 +19,7 @@ strum_macros = "0.24"
 ordered-float = { version = "2.10", default-features = false }
 tfc = "0.6.0"
 num = "0.3"
+imageproc = "0.20.0"
 
 plotters = "^0.3.1"
 
