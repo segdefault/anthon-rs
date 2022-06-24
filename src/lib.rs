@@ -1,4 +1,4 @@
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::SystemTime;
 
@@ -27,10 +27,11 @@ pub const MPF: u64 = ((1f32 / FPS as f32) * 1000f32) as u64;
 const CONFIG_PATH: &str = "config.yaml";
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let (tx, rx) = mpsc::channel();
+    let interrupted = Arc::new(Mutex::new(false));
     let config = Arc::new(Mutex::new(
         Config::from_file(CONFIG_PATH).unwrap_or_default(),
     ));
+
     let window = MainWindow::new();
     let mut camera = ThreadedCamera::new(
         0,
@@ -49,28 +50,32 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     let window_weak = window.as_weak();
     let config_clone = Arc::clone(&config);
-    let processing_thread = thread::spawn(move || {
-        let mut core = Core::new(window_weak, camera, config_clone);
-        let mut spf = Wmaf32::new(5);
+    let processing_thread = thread::spawn({
+        let interrupted = interrupted.clone();
 
-        while rx.try_recv().is_err() {
-            let last_time = SystemTime::now();
-            core.tick();
-            // thread::sleep(Duration::from_millis(MPF));
+        move || {
+            let mut core = Core::new(window_weak, camera, config_clone);
+            let mut spf = Wmaf32::new(5);
 
-            spf.set_value(
-                SystemTime::now()
-                    .duration_since(last_time)
-                    .unwrap()
-                    .as_secs_f32(),
-            );
-            println!("{}", 1f32 / *spf);
-            thread::yield_now()
+            while !*interrupted.lock().unwrap() {
+                let last_time = SystemTime::now();
+                core.tick();
+                // thread::sleep(Duration::from_millis(MPF));
+
+                spf.set_value(
+                    SystemTime::now()
+                        .duration_since(last_time)
+                        .unwrap()
+                        .as_secs_f32(),
+                );
+                println!("{}", 1f32 / *spf);
+                thread::yield_now()
+            }
         }
     });
 
     window.run();
-    tx.send(0)?;
+    *interrupted.lock().unwrap() = true;
     config.lock().unwrap().save(CONFIG_PATH)?;
     processing_thread
         .join()
