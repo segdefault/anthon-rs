@@ -1,0 +1,10 @@
+/ui/images
+/cargo
+/target
+plot*
+/lsp
+libmediapipe.so
+/mediapipe
+/config.yaml*
+/.idea
+TODO
