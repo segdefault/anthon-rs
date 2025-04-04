@@ -331,7 +331,7 @@ impl MainWindow {
             }
         }
 
-        for mut edge in config
+        for edge in config
             .state_graph_mut()
             .edge_iter_mut()
             .flat_map(|(_, e)| e.values_mut())
@@ -455,7 +455,7 @@ impl MainWindow {
 
     fn add_node(&self, x: f32, y: f32, config: Arc<Mutex<Config>>, nodes: Rc<VecModel<SlintNode>>) {
         let mut config = config.lock().unwrap();
-        let mut state = config.new_state();
+        let state = config.new_state();
 
         state.x = x;
         state.y = y;
