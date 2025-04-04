@@ -145,6 +145,9 @@ impl PointerTracker {
 
     pub fn annotate(frame: &mut RgbImage, mut dvb: Rectangle, center: (f32, f32)) -> Image {
         dvb.multiply(frame.width() as f32, frame.height() as f32);
+        dvb.width = dvb.width.max(1.0);
+        dvb.height = dvb.height.max(1.0);
+
         let center = (
             (center.0 * frame.width() as f32) as i32,
             (center.1 * frame.height() as f32) as i32,
