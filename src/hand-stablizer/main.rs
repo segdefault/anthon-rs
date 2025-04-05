@@ -16,7 +16,7 @@ fn record(count: usize) -> Vec<Packet> {
             640,
             480,
             FrameFormat::MJPEG,
-            anthon_rs::FPS as u32,
+            anthon_rs::TARGET_FPS as u32,
         )),
     )
     .expect("Capturing device initialization failed.");
@@ -34,7 +34,7 @@ fn record(count: usize) -> Vec<Packet> {
             if packet.landmarks.is_some() {
                 break packet;
             } else {
-                thread::sleep(Duration::from_millis(anthon_rs::MPF));
+                thread::sleep(Duration::from_millis(anthon_rs::TARGET_MPF));
             }
         })
         .collect()
