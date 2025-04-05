@@ -4,8 +4,9 @@ Anthon-rs is a gesture creation and recognition program. It uses Mediapipe as a 
 
 ## Instructions
 
-1. Build a standalone mediapipe library with a C interface that matches `src/mediapipe.rs`. I will upload my version or add some instructions if needed... someday.
-2. Run `LD_LIBRARY_PATH=$PATH_TO_LIBRARY LIBRARY_PATH=$PATH_TO_LIBRARY cargo run`
+1. Install build dependencies of [MediaPipe v0.10.23](https://github.com/google-ai-edge/mediapipe/tree/v0.10.23). Later versions may work, but this is what I can confirm to be functioning.
+2. Run `build_libmediapipe.sh` or `build_libmediapipe.sh -g` to build with GPU support. It will automatically clone and build mediapipe.
+3. Run the project `LD_LIBRARY_PATH=. LIBRARY_PATH=. cargo run --bin anthon-rs`
 
 ## Usage
 

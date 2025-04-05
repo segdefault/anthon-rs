@@ -5,6 +5,7 @@ plot*
 /lsp
 libmediapipe.so
 /mediapipe
+/mediapipe_src
 /config.yaml*
 /.idea
 TODO
