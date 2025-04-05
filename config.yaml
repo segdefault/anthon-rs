@@ -1,0 +1,90 @@
+---
+sign_dictionary:
+  signs:
+    Click:
+      required_attributes:
+        bits: 0
+        capacity: 9
+      irrelevant_attributes:
+        bits: 18446744073709551105
+        capacity: 9
+    Palm:
+      required_attributes:
+        bits: 30
+        capacity: 9
+      irrelevant_attributes:
+        bits: 18446744073709551585
+        capacity: 9
+    Salute:
+      required_attributes:
+        bits: 32
+        capacity: 9
+      irrelevant_attributes:
+        bits: 18446744073709551105
+        capacity: 9
+    VMid:
+      required_attributes:
+        bits: 128
+        capacity: 9
+      irrelevant_attributes:
+        bits: 18446744073709551137
+        capacity: 9
+state_graph:
+  nodes:
+    0:
+      index: 0
+      name: Start
+      type: Basic
+      events:
+        OnExit: Disabled
+        OnEnter: Disabled
+      x: 0.0
+      y: 0.0
+    1:
+      index: 1
+      name: Track
+      type: Pointing
+      events:
+        OnExit: Disabled
+        OnEnter: Disabled
+      x: 237.5
+      y: 130.5
+    2:
+      index: 2
+      name: Click
+      type: Basic
+      events:
+        OnEnter:
+          Mouse:
+            - Left
+            - Click
+        OnExit: Disabled
+      x: 367.5
+      y: 258.5
+  edges:
+    1:
+      0:
+        next: 0
+        trigger: Palm
+      2:
+        next: 2
+        trigger: Click
+    2:
+      1:
+        next: 1
+        trigger: Salute
+    0:
+      1:
+        next: 1
+        trigger: VMid
+  inverse_edges:
+    2:
+      - 1
+    1:
+      - 0
+      - 2
+    0:
+      - 1
+last_node_id: 2
+sign_switching_smoothness: 0.5
+sign_probability_threshold: 0.9
